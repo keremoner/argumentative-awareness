@@ -124,6 +124,9 @@ class World:
             self._obs_prob_tables[theta_key] = table
         return self._obs_prob_tables[theta_key]
 
+    def obs_likelihoods(self, obs, thetas):
+        return self.obs_prob_table(thetas)[self.obs_index(obs)]
+
     def sample_obs(self):
         """Sample an observation according to P(obs | self.theta)."""
         all_obs = self.generate_all_obs()
