@@ -97,6 +97,7 @@ class World:
         self.all_obs = None
         self._obs_index = None
         self._obs_prob_tables = {}
+        self._obs_sample_probs = {}
 
     def obs_prob(self, obs, theta):
         """Return P(obs | theta)."""
@@ -130,6 +131,9 @@ class World:
     def sample_obs(self):
         """Sample an observation according to P(obs | self.theta)."""
         all_obs = self.generate_all_obs()
-        probs = self.obs_prob_table((self.theta,))[:, 0].copy()
-        probs = probs / probs.sum()
+        if self.theta not in self._obs_sample_probs:
+            probs = self.obs_prob_table((self.theta,))[:, 0].copy()
+            probs = probs / probs.sum()
+            self._obs_sample_probs[self.theta] = probs
+        probs = self._obs_sample_probs[self.theta]
         return random.choices(all_obs, weights=probs, k=1)[0]

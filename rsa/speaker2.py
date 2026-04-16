@@ -44,6 +44,7 @@ class Speaker2:
         self.utterances_obs_psi = {}
         self._utterances_obs_psi_array = {}
         self._utterance_theta_psi_array = {}
+        self._obs_utt_table_psi = {}
 
     def infer_state(self, obs):
         """Posterior P(theta | obs)."""
@@ -62,6 +63,7 @@ class Speaker2:
         self.utterances_obs_psi = {}
         self._utterances_obs_psi_array = {}
         self._utterance_theta_psi_array = {}
+        self._obs_utt_table_psi = {}
         return self.belief_theta.as_dict()
 
     def _dist_over_utterances_obs_array(self, obs, psi):
@@ -159,7 +161,7 @@ class Speaker2:
             return self.utterance_theta_psi[(theta, psi)]
         theta_idx = self._theta_to_index[theta]
         obs_probs = self.world.obs_prob_table(self.thetas)[:, theta_idx]
-        obs_utt_table = np.vstack([self._dist_over_utterances_obs_array(obs, psi) for obs in self._obs_list])
+        obs_utt_table = self.obs_utt_table_for_psi(psi)
         probs = obs_utt_table.T @ obs_probs
         result = dict(zip(self._utterances, probs))
         self._utterance_theta_psi_array[(theta, psi)] = probs
@@ -170,6 +172,13 @@ class Speaker2:
         if (theta, psi) not in self._utterance_theta_psi_array:
             self.dist_over_utterances_theta(theta, psi)
         return self._utterance_theta_psi_array[(theta, psi)]
+
+    def obs_utt_table_for_psi(self, psi):
+        if psi not in self._obs_utt_table_psi:
+            self._obs_utt_table_psi[psi] = np.vstack(
+                [self._dist_over_utterances_obs_array(obs, psi) for obs in self._obs_list]
+            )
+        return self._obs_utt_table_psi[psi]
 
     def sample_utterance(self, obs):
         probs = self._dist_over_utterances_obs_array(obs, self.psi)
