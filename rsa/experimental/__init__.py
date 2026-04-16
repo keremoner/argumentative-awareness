@@ -12,4 +12,12 @@ from .speaker1_variants import (
     Speaker1_state_inf_new_pers2,
     Speaker1_state_inf_new_pers4,
 )
-from .listener_switch import Listener1Switch, Listener2Switch
+from .listener_switch import (
+    Listener1Switch,
+    Listener2Switch,
+    SuspicionSwitchListenerS0,
+    SuspicionSwitchListener,
+    simulate_suspicion_listener,
+    estimate_fpr,
+    estimate_tpr,
+)
