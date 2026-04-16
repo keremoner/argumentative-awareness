@@ -109,9 +109,7 @@ class Listener1:
         result = np.zeros_like(obs_psi)
 
         for psi_idx, psi in enumerate(self.psis):
-            obs_utt = np.vstack(
-                [self.speaker._dist_over_utterances_obs_array(obs, psi) for obs in self._obs_list]
-            )[:, utt_idx]
+            obs_utt = self.speaker.obs_utt_table_for_psi(psi)[:, utt_idx]
             result[:, psi_idx] = obs_utt * obs_psi[:, psi_idx] / utt_prior
 
         self._obs_psi_utt_array[utt] = result
@@ -141,9 +139,7 @@ class Listener1:
         obs_psi = self._distribution_over_obs_psi_array()
         utt_priors = np.zeros(len(self._utterances), dtype=float)
         for psi_idx, psi in enumerate(self.psis):
-            obs_utt = np.vstack(
-                [self.speaker._dist_over_utterances_obs_array(obs, psi) for obs in self._obs_list]
-            )
+            obs_utt = self.speaker.obs_utt_table_for_psi(psi)
             utt_priors += obs_utt.T @ obs_psi[:, psi_idx]
 
         self._prior_utt_array = utt_priors
