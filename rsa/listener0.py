@@ -20,15 +20,19 @@ class Listener0:
         self.hist = [deepcopy(self.state_belief)]
         self.prior_utt = None
         self.obs_utt = {}
+        self.state_utt = {}
 
     def infer_state(self, utt):
         """Posterior P(theta | utt)."""
-        likelihoods = []
-        for state in self.state_belief.values:
-            utt_dist = self.speaker.dist_over_utterances_theta(state)
-            likelihoods.append(utt_dist.get(utt, 0.0))
+        if utt in self.state_utt:
+            return self.state_utt[utt]
+        likelihoods = np.array(
+            [self.speaker.dist_over_utterances_theta(state).get(utt, 0.0) for state in self.state_belief.values],
+            dtype=float,
+        )
         posterior = Belief(self.state_belief.values, self.state_belief.prob.copy())
         posterior.update(likelihoods)
+        self.state_utt[utt] = posterior
         return posterior
 
     def infer_obs(self, utt):
@@ -68,5 +72,6 @@ class Listener0:
         self.state_belief = new_belief
         self.prior_utt = None
         self.obs_utt = {}
+        self.state_utt = {}
         self.hist.append(deepcopy(self.state_belief))
         return self.state_belief.as_dict()

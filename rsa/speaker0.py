@@ -30,7 +30,7 @@ class Speaker0:
 
     def infer_state(self, obs):
         """Posterior P(theta | obs)."""
-        likelihoods = [self.world.obs_prob(obs, theta) for theta in self.thetas]
+        likelihoods = self.world.obs_likelihoods(obs, self.thetas)
         posterior = Belief(self.thetas, self.belief_theta.prob.copy())
         posterior.update(likelihoods)
         return posterior
@@ -39,7 +39,6 @@ class Speaker0:
         """Update belief after observing data."""
         self.belief_theta = self.infer_state(obs)
         self.hist.append(deepcopy(self.belief_theta))
-        self.utterances_theta = {}
         return self.belief_theta.as_dict()
 
     def dist_over_utterances_obs(self, obs):

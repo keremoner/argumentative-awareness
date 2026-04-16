@@ -6,7 +6,7 @@ Maintains a joint belief P(theta, psi) and reasons about S1's goals.
 - Credulous (listener_type="inf"): assumes psi=inf only (cooperative world)
 - Vigilant (listener_type="vig"): considers all psi types (strategic world)
 
-P_L1(theta, psi | u) ∝ P_L1(theta, psi) * P_S1(u | theta, psi)
+P_L1(theta, psi | u) is proportional to P_L1(theta, psi) * P_S1(u | theta, psi)
 """
 
 import numpy as np
@@ -34,6 +34,9 @@ class Listener1:
         self.listener_type = listener_type
         self.thetas = thetas
         self._theta_to_index = {theta: idx for idx, theta in enumerate(self.thetas)}
+        self._psi_to_index = {psi: idx for idx, psi in enumerate(self.psis)}
+        self._utterances = self.semantics.utterance_space()
+        self._obs_list = self.world.generate_all_obs()
 
         self.hist = [deepcopy(self.state_belief)]
         self.suspicion = []
@@ -45,73 +48,113 @@ class Listener1:
         self.prior_utt = None
         self.obs_utt = {}
         self.suspicions = {}
+        self.state_utt = {}
+        self._state_utt_array = {}
+        self._obs_psi_array = None
+        self._obs_psi_utt_array = {}
+        self._prior_utt_array = None
 
     def infer_state(self, utt):
         """Posterior P(theta, psi | utt)."""
-        likelihoods = []
-        for state in self.state_belief.values:
-            utt_dist = self.speaker.dist_over_utterances_theta(state[0], state[1])
-            likelihoods.append(utt_dist.get(utt, 0.0))
+        if utt in self.state_utt:
+            return self.state_utt[utt]
+        utt_idx = self.semantics.utterance_index(utt)
+        likelihoods = np.array(
+            [
+                self.speaker.dist_over_utterances_theta_array(theta, psi)[utt_idx]
+                for theta, psi in self.state_belief.values
+            ],
+            dtype=float,
+        )
         posterior = Belief(self.state_belief.values, self.state_belief.prob.copy())
         posterior.update(likelihoods)
+        self.state_utt[utt] = posterior
+        self._state_utt_array[utt] = posterior.prob.copy()
         return posterior
+
+    def _distribution_over_obs_psi_array(self):
+        if self._obs_psi_array is not None:
+            return self._obs_psi_array
+
+        obs_prob_table = self.world.obs_prob_table(self.thetas)
+        result = np.zeros((len(self._obs_list), len(self.psis)), dtype=float)
+        for (theta, psi), state_prob in zip(self.state_belief.values, self.state_belief.prob):
+            result[:, self._psi_to_index[psi]] += obs_prob_table[:, self._theta_to_index[theta]] * state_prob
+
+        self._obs_psi_array = result
+        self.obs_psi = {
+            (obs, psi): result[obs_idx, psi_idx]
+            for obs_idx, obs in enumerate(self._obs_list)
+            for psi_idx, psi in enumerate(self.psis)
+        }
+        return result
 
     def infer_obs(self, utt):
         """P(obs | utt) marginalizing over psi."""
         if utt in self.obs_utt:
             return self.obs_utt[utt]
-        result = {}
-        obs_psi_utt = self.infer_obs_psi(utt)
-        psi_probs = self.marginal_psi()
-        for obs in self.world.generate_all_obs():
-            for psi, prob in psi_probs.items():
-                result[obs] = result.get(obs, 0.0) + obs_psi_utt[(obs, psi)]
+        obs_psi_utt = self._infer_obs_psi_array(utt)
+        probs = obs_psi_utt.sum(axis=1)
+        result = dict(zip(self._obs_list, probs))
         self.obs_utt[utt] = result
+        return result
+
+    def _infer_obs_psi_array(self, utt):
+        if utt in self._obs_psi_utt_array:
+            return self._obs_psi_utt_array[utt]
+
+        utt_idx = self.semantics.utterance_index(utt)
+        obs_psi = self._distribution_over_obs_psi_array()
+        utt_prior = self._prior_over_utt_array()[utt_idx]
+        result = np.zeros_like(obs_psi)
+
+        for psi_idx, psi in enumerate(self.psis):
+            obs_utt = np.vstack(
+                [self.speaker._dist_over_utterances_obs_array(obs, psi) for obs in self._obs_list]
+            )[:, utt_idx]
+            result[:, psi_idx] = obs_utt * obs_psi[:, psi_idx] / utt_prior
+
+        self._obs_psi_utt_array[utt] = result
+        self.obs_psi_utt[utt] = {
+            (obs, psi): result[obs_idx, psi_idx]
+            for obs_idx, obs in enumerate(self._obs_list)
+            for psi_idx, psi in enumerate(self.psis)
+        }
         return result
 
     def infer_obs_psi(self, utt):
         """P(obs, psi | utt)."""
-        if utt in self.obs_psi_utt:
-            return self.obs_psi_utt[utt]
-        result = {(obs, psi): 0.0 for obs in self.world.generate_all_obs() for psi in self.psis}
-        obs_psi = self.distribution_over_obs_psi()
-        utt_priors = self.prior_over_utt()
-        for obs in self.world.generate_all_obs():
-            for psi in self.psis:
-                result[(obs, psi)] = (
-                    self.speaker.dist_over_utterances_obs(obs, psi)[utt]
-                    * obs_psi[(obs, psi)]
-                    / utt_priors[utt]
-                )
-        self.obs_psi_utt[utt] = result
-        return result
+        if utt not in self.obs_psi_utt:
+            self._infer_obs_psi_array(utt)
+        return self.obs_psi_utt[utt]
 
     def distribution_over_obs_psi(self):
         """P(obs, psi) marginalizing over theta."""
-        if self.obs_psi is not None:
-            return self.obs_psi
-        result = {(obs, psi): 0.0 for obs in self.world.generate_all_obs() for psi in self.psis}
-        obs_prob_table = self.world.obs_prob_table(self.thetas)
-        for state, state_prob in self.state_belief.as_dict().items():
-            theta_idx = self._theta_to_index[state[0]]
-            for obs_idx, obs in enumerate(self.world.generate_all_obs()):
-                result[(obs, state[1])] += obs_prob_table[obs_idx, theta_idx] * state_prob
-        self.obs_psi = result
-        return result
+        if self.obs_psi is None:
+            self._distribution_over_obs_psi_array()
+        return self.obs_psi
+
+    def _prior_over_utt_array(self):
+        if self._prior_utt_array is not None:
+            return self._prior_utt_array
+
+        obs_psi = self._distribution_over_obs_psi_array()
+        utt_priors = np.zeros(len(self._utterances), dtype=float)
+        for psi_idx, psi in enumerate(self.psis):
+            obs_utt = np.vstack(
+                [self.speaker._dist_over_utterances_obs_array(obs, psi) for obs in self._obs_list]
+            )
+            utt_priors += obs_utt.T @ obs_psi[:, psi_idx]
+
+        self._prior_utt_array = utt_priors
+        self.prior_utt = dict(zip(self._utterances, utt_priors))
+        return utt_priors
 
     def prior_over_utt(self):
         """P(utt) marginalizing over theta, psi, and observations."""
-        if self.prior_utt is not None:
-            return self.prior_utt
-        utt_priors = {utt: 0.0 for utt in self.semantics.utterance_space()}
-        obs_psi_dist = self.distribution_over_obs_psi()
-        for obs_case in self.world.generate_all_obs():
-            for psi in self.psis:
-                speaker_dist = self.speaker.dist_over_utterances_obs(obs_case, psi)
-                for utt in self.semantics.utterance_space():
-                    utt_priors[utt] += speaker_dist[utt] * obs_psi_dist[(obs_case, psi)]
-        self.prior_utt = utt_priors
-        return utt_priors
+        if self.prior_utt is None:
+            self._prior_over_utt_array()
+        return self.prior_utt
 
     def update(self, utt):
         """Update belief after hearing utterance."""
@@ -126,6 +169,11 @@ class Listener1:
         self.obs_psi = None
         self.prior_utt = None
         self.obs_utt = {}
+        self.state_utt = {}
+        self._state_utt_array = {}
+        self._obs_psi_array = None
+        self._obs_psi_utt_array = {}
+        self._prior_utt_array = None
         return self.state_belief
 
     def marginal_theta(self):
@@ -155,7 +203,7 @@ class Listener1:
             for u, prob in speaker_probs.items():
                 if np.isclose(prob, speaker_probs[utt], rtol=1e-9, atol=1e-12):
                     continue
-                elif prob > speaker_probs[utt]:
+                if prob > speaker_probs[utt]:
                     suspicion += state_prior * prob
         self.suspicions[utt] = suspicion
         return suspicion

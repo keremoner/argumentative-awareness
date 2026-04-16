@@ -35,16 +35,19 @@ class Speaker2:
         self.prob_hist = []
         self._utterances = self.semantics.utterance_space()
         self._theta_to_index = {theta: idx for idx, theta in enumerate(self.thetas)}
+        self._obs_list = self.world.generate_all_obs()
 
         # Caches
         self.utterance_theta_psi = {}
         self.informativeness_obs_utt = {}
         self.persuasiveness_psi = {}
         self.utterances_obs_psi = {}
+        self._utterances_obs_psi_array = {}
+        self._utterance_theta_psi_array = {}
 
     def infer_state(self, obs):
         """Posterior P(theta | obs)."""
-        likelihoods = [self.world.obs_prob(obs, theta) for theta in self.thetas]
+        likelihoods = self.world.obs_likelihoods(obs, self.thetas)
         posterior = Belief(self.thetas, self.belief_theta.prob.copy())
         posterior.update(likelihoods)
         return posterior
@@ -57,7 +60,36 @@ class Speaker2:
         self.informativeness_obs_utt = {}
         self.persuasiveness_psi = {}
         self.utterances_obs_psi = {}
+        self._utterances_obs_psi_array = {}
+        self._utterance_theta_psi_array = {}
         return self.belief_theta.as_dict()
+
+    def _dist_over_utterances_obs_array(self, obs, psi):
+        if (obs, psi) in self._utterances_obs_psi_array:
+            return self._utterances_obs_psi_array[(obs, psi)]
+
+        persuasiveness = self.get_persuasiveness(psi, obs)
+        truth_row = self.semantics.truth_table(self.world)[self.world.obs_index(obs)]
+        scores = np.zeros(len(self._utterances), dtype=float)
+
+        for i, (utt, is_true) in enumerate(zip(self._utterances, truth_row)):
+            if is_true:
+                info_val = self.get_informativeness_obs_utt(obs, utt)
+                pers_val = persuasiveness[utt]
+                if psi == "inf":
+                    scores[i] = np.exp(self.alpha * info_val)
+                elif pers_val > 0:
+                    scores[i] = np.exp(self.alpha * np.log2(pers_val))
+
+        score_sum = scores.sum()
+        if score_sum == 0:
+            scores = truth_row.astype(float)
+            score_sum = scores.sum()
+
+        probs = scores / score_sum
+        self._utterances_obs_psi_array[(obs, psi)] = probs
+        self.utterances_obs_psi[(obs, psi)] = dict(zip(self._utterances, probs))
+        return probs
 
     def get_informativeness_obs_utt(self, obs, utt):
         """
@@ -73,11 +105,9 @@ class Speaker2:
             if listener_dist[theta] == 0:
                 if prob == 0:
                     continue
-                else:
-                    result = float('-inf')
-                    break
-            else:
-                result += np.log2(listener_dist[theta]) * prob
+                result = float("-inf")
+                break
+            result += np.log2(listener_dist[theta]) * prob
         self.informativeness_obs_utt[(obs, utt)] = result
         return result
 
@@ -88,17 +118,13 @@ class Speaker2:
         """
         if (psi, obs) in self.persuasiveness_psi:
             return self.persuasiveness_psi[(psi, obs)]
-        utterances = self._utterances
-        result = {u: 0.0 for u in utterances}
-        current_listener_belief = self.listener.state_belief.marginal(0)
-        current_listener_mean = sum(theta * prob for theta, prob in current_listener_belief.items())
+        result = {u: 0.0 for u in self._utterances}
 
-        pers_mean = 0
+        pers_mean = 0.0
         amount = 0
-
-        for utt in utterances:
+        for utt in self._utterances:
             if psi == "inf":
-                result[utt] = 1
+                result[utt] = 1.0
             elif psi == "high":
                 for state, state_prob in self.listener.infer_state(utt).as_dict().items():
                     result[utt] += state[0] * state_prob
@@ -112,7 +138,7 @@ class Speaker2:
                 amount += 1
 
         pers_mean /= amount
-        for utt in utterances:
+        for utt in self._utterances:
             if psi == "high":
                 result[utt] = result[utt] - pers_mean
             elif psi == "low":
@@ -123,56 +149,29 @@ class Speaker2:
 
     def dist_over_utterances_obs(self, obs, psi):
         """P_S2(u | O, psi) using informativeness toward L1 and persuasiveness."""
-        if (obs, psi) in self.utterances_obs_psi:
-            return self.utterances_obs_psi[(obs, psi)]
-        utterances = self._utterances
-        persuasiveness = self.get_persuasiveness(psi, obs)
-        truth_row = self.semantics.truth_table(self.world)[self.world.obs_index(obs)]
-        true_utterances = [utt for utt, is_true in zip(utterances, truth_row) if is_true]
-        beta = 1.0 if psi == "inf" else 0.0
-
-        scores = []
-        for utt, is_true in zip(utterances, truth_row):
-            info_val = self.get_informativeness_obs_utt(obs, utt)
-            pers_val = persuasiveness[utt]
-            if is_true:
-                if psi == "inf":
-                    score = np.exp(self.alpha * info_val)
-                else:
-                    if pers_val <= 0:
-                        score = 0.0
-                    else:
-                        score = np.exp(self.alpha * np.log2(pers_val) * (1 - beta))
-            else:
-                score = 0.0
-            scores.append(score)
-
-        scores = np.array(scores)
-        if np.sum(scores) == 0:
-            for i, utt in enumerate(utterances):
-                if utt in true_utterances:
-                    scores[i] = 1.0
-
-        probs = scores / np.sum(scores)
-        self.utterances_obs_psi[(obs, psi)] = dict(zip(utterances, probs))
+        if (obs, psi) not in self.utterances_obs_psi:
+            self._dist_over_utterances_obs_array(obs, psi)
         return self.utterances_obs_psi[(obs, psi)]
 
     def dist_over_utterances_theta(self, theta, psi):
         """P(u | theta, psi) marginalizing over observations."""
         if (theta, psi) in self.utterance_theta_psi:
             return self.utterance_theta_psi[(theta, psi)]
-        result = {u: 0.0 for u in self._utterances}
         theta_idx = self._theta_to_index[theta]
         obs_probs = self.world.obs_prob_table(self.thetas)[:, theta_idx]
-        for obs_idx, obs in enumerate(self.world.generate_all_obs()):
-            obs_prob = obs_probs[obs_idx]
-            for utt, prob in self.dist_over_utterances_obs(obs, psi).items():
-                result[utt] += prob * obs_prob
+        obs_utt_table = np.vstack([self._dist_over_utterances_obs_array(obs, psi) for obs in self._obs_list])
+        probs = obs_utt_table.T @ obs_probs
+        result = dict(zip(self._utterances, probs))
+        self._utterance_theta_psi_array[(theta, psi)] = probs
         self.utterance_theta_psi[(theta, psi)] = result
         return result
 
+    def dist_over_utterances_theta_array(self, theta, psi):
+        if (theta, psi) not in self._utterance_theta_psi_array:
+            self.dist_over_utterances_theta(theta, psi)
+        return self._utterance_theta_psi_array[(theta, psi)]
+
     def sample_utterance(self, obs):
-        self.prob_hist.append(self.dist_over_utterances_obs(obs, self.psi))
-        dist = self.dist_over_utterances_obs(obs, self.psi)
-        utterances, probs = zip(*dist.items())
-        return random.choices(utterances, weights=probs, k=1)[0]
+        probs = self._dist_over_utterances_obs_array(obs, self.psi)
+        self.prob_hist.append(dict(zip(self._utterances, probs)))
+        return random.choices(self._utterances, weights=probs, k=1)[0]
