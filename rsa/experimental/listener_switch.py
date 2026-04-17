@@ -620,15 +620,83 @@ class SuspicionSwitchListener(SuspicionSwitchListenerS0):
         return sus_score, var_score
 
 
+class DiscrepancySwitchListener(SuspicionSwitchListenerS0):
+    """
+    Posterior-predictive discrepancy switch listener.
+
+    Instead of inverting to a posterior over observations, this test directly
+    scores the predictive probability of the utterance under the informative-
+    speaker hypothesis:
+
+        P_pred(u) = sum_O S1(u | O, inf) * P_L0(O)
+        disc_centered(t) = -log P_pred(u^(t)) - H(P_pred)
+
+    The cumulative sum of raw discrepancies equals -log P(u^(1:t) | inf),
+    giving the test a clean interpretation as a marginal-likelihood ratio.
+
+    Everything else (L0 updates, switch mechanism, hard/soft switch) is
+    identical to the suspicion-based listeners.
+
+    Parameters
+    ----------
+    thetas, psis, speaker, world, semantics, c, alpha, hard_switch :
+        Same as ``SuspicionSwitchListenerS0``.
+    """
+
+    def _compute_sus_and_var(self, utt):
+        """Compute centred discrepancy and varentropy for round t.
+
+        Returns
+        -------
+        disc_centered : float
+            -log P_pred(u) - H(P_pred).  E[.] = 0 under the null.
+        var_disc : float
+            Varentropy of P_pred, used for the sigma normalizer.
+        """
+        utt_idx = self.semantics.utterance_index(utt)
+
+        # P_L0(O) = sum_theta P(O|theta) * L0(theta)
+        l0_prior = self.speaker.listener.state_belief.prob     # n_theta
+        obs_prob_table = self.world.obs_prob_table(self.thetas)  # n_obs x n_theta
+        obs_marginal = obs_prob_table @ l0_prior               # n_obs
+
+        # P_pred(u) = sum_O S1(u | O, inf) * P_L0(O)
+        obs_utt_table = self.speaker.obs_utt_table_for_psi("inf")  # n_obs x n_utt
+        p_pred = obs_utt_table.T @ obs_marginal                    # n_utt
+
+        p_sum = p_pred.sum()
+        if p_sum <= 0.0:
+            return 0.0, 0.0
+        p_pred = p_pred / p_sum
+
+        log_p = np.log(np.maximum(p_pred, 1e-10))
+
+        # disc_raw = -log P_pred(u^(t))
+        disc_raw = -log_p[utt_idx]
+
+        # H_pred = -sum_u P_pred(u) * log P_pred(u)
+        H_pred = -np.dot(p_pred, log_p)
+
+        # disc_centered = disc_raw - H_pred
+        disc_centered = disc_raw - H_pred
+
+        # Varentropy: Var_{u ~ P_pred}[-log P_pred(u)]
+        E_sq = np.dot(p_pred, log_p ** 2)
+        var_disc = E_sq - H_pred ** 2
+
+        return disc_centered, var_disc
+
+
 # ---------------------------------------------------------------------------
-# Simulation-based FPR / TPR analysis for SuspicionSwitchListener
+# Simulation-based FPR / TPR analysis
 # ---------------------------------------------------------------------------
 
 def simulate_suspicion_listener(
     thetas, psis, semantics, world, speaker_type="inf",
-    c=1.0, alpha=1.0, rounds=20, n_sims=100, hard_switch=True
+    c=1.0, alpha=1.0, rounds=20, n_sims=100, hard_switch=True,
+    listener_cls=None
 ):
-    """Run *n_sims* independent simulations of the SuspicionSwitchListener game.
+    """Run *n_sims* independent simulations of a switch-listener game.
 
     Each simulation creates fresh agents so there is no state contamination
     across trials.  The world's fixed ``theta`` is preserved across simulations.
@@ -641,20 +709,26 @@ def simulate_suspicion_listener(
     alpha : rationality
     rounds : number of communication rounds per simulation
     n_sims : number of independent Monte-Carlo simulations
-    hard_switch : forwarded to SuspicionSwitchListener
+    hard_switch : forwarded to the listener constructor
+    listener_cls : class, optional
+        Listener class to instantiate.  Defaults to ``SuspicionSwitchListener``.
+        Can also be ``DiscrepancySwitchListener`` or ``SuspicionSwitchListenerS0``.
 
     Returns
     -------
     results : list of dicts, one per simulation, each containing:
         ``switched``      : bool -- did the listener ever switch?
         ``switched_at``   : int or None -- round of first switch (1-indexed)
-        ``Sus_history``   : list of Sus(t) values per round
+        ``Sus_history``   : list of running-average score values per round
         ``state_history`` : list of "naive"/"vigilant" strings per round
         ``theta_history`` : list of marginal_theta() dicts per round
     """
     from ..speaker0 import Speaker0
     from ..listener0 import Listener0
     from ..speaker1 import Speaker1
+
+    if listener_cls is None:
+        listener_cls = SuspicionSwitchListener
 
     results = []
 
@@ -663,7 +737,7 @@ def simulate_suspicion_listener(
         l0 = Listener0(thetas, s0, semantics=semantics, world=world)
         s1 = Speaker1(thetas, l0, semantics=semantics, world=world,
                       alpha=alpha, psi=speaker_type)
-        listener = SuspicionSwitchListener(
+        listener = listener_cls(
             thetas, psis, s1, world, semantics,
             c=c, alpha=alpha, hard_switch=hard_switch
         )
@@ -697,8 +771,95 @@ def simulate_suspicion_listener(
     return results
 
 
+def simulate_comparison(
+    thetas, psis, semantics, world, speaker_type="inf",
+    c=1.0, alpha=1.0, rounds=20, n_sims=100, hard_switch=True
+):
+    """Run both suspicion and discrepancy tests on the same utterance streams.
+
+    Neither test drives actual switching -- both run with ``c=inf`` so we can
+    compare their raw score trajectories on identical data.
+
+    Parameters
+    ----------
+    thetas, psis, semantics, world : standard game objects
+    speaker_type, alpha, rounds, n_sims, hard_switch : as usual
+
+    Returns
+    -------
+    results : list of dicts, one per simulation, each containing:
+        ``sus_history``  : list of Sus(t)  per round  (suspicion test)
+        ``disc_history`` : list of Disc(t) per round  (discrepancy test)
+        ``sus_per_round``  : list of per-round sus^(i)
+        ``disc_per_round`` : list of per-round disc_centered^(i)
+        ``sigma_sus``    : list of sigma(t)  for suspicion
+        ``sigma_disc``   : list of sigma(t)  for discrepancy
+    """
+    from ..speaker0 import Speaker0
+    from ..listener0 import Listener0
+    from ..speaker1 import Speaker1
+
+    results = []
+
+    for _ in range(n_sims):
+        # Single agent stack — shared L0 prior for both tests
+        s0 = Speaker0(thetas, semantics=semantics, world=world)
+        l0 = Listener0(thetas, s0, semantics=semantics, world=world)
+        s1 = Speaker1(thetas, l0, semantics=semantics, world=world,
+                      alpha=alpha, psi=speaker_type)
+
+        # Both listeners share the same speaker (and therefore the same L0)
+        # c=inf so neither switches — pure observation mode
+        sus_listener = SuspicionSwitchListener(
+            thetas, psis, s1, world, semantics,
+            c=float("inf"), alpha=alpha, hard_switch=hard_switch
+        )
+        disc_listener = DiscrepancySwitchListener(
+            thetas, psis, s1, world, semantics,
+            c=float("inf"), alpha=alpha, hard_switch=hard_switch
+        )
+
+        sus_hist, disc_hist = [], []
+        sus_pr, disc_pr = [], []
+        sigma_sus, sigma_disc = [], []
+
+        for _ in range(rounds):
+            obs = world.sample_obs()
+            utt = s1.sample_utterance(obs)
+
+            # Compute per-round scores before any update
+            s_t, sv_t = sus_listener._compute_sus_and_var(utt)
+            d_t, dv_t = disc_listener._compute_sus_and_var(utt)
+            sus_pr.append(s_t)
+            disc_pr.append(d_t)
+
+            # Update both listeners (they only update the naive L1 internally;
+            # the shared S1/L0 is updated once below)
+            sus_listener.update(utt)
+            disc_listener.update(utt)
+            s1.update(obs)
+            l0.update(utt)
+            s0.update(obs)
+
+            sus_hist.append(sus_listener.Sus_running)
+            disc_hist.append(disc_listener.Sus_running)
+            sigma_sus.append(np.sqrt(sus_listener.sigma2_running))
+            sigma_disc.append(np.sqrt(disc_listener.sigma2_running))
+
+        results.append({
+            "sus_history": sus_hist,
+            "disc_history": disc_hist,
+            "sus_per_round": sus_pr,
+            "disc_per_round": disc_pr,
+            "sigma_sus": sigma_sus,
+            "sigma_disc": sigma_disc,
+        })
+
+    return results
+
+
 def estimate_fpr(thetas, psis, semantics, world, c=1.0, alpha=1.0,
-                 rounds=20, n_sims=200, hard_switch=True):
+                 rounds=20, n_sims=200, hard_switch=True, listener_cls=None):
     """Estimate FPR(c, t) = P(switched by round t | psi=inf) by simulation.
 
     Returns
@@ -708,7 +869,8 @@ def estimate_fpr(thetas, psis, semantics, world, c=1.0, alpha=1.0,
     """
     results = simulate_suspicion_listener(
         thetas, psis, semantics, world, speaker_type="inf",
-        c=c, alpha=alpha, rounds=rounds, n_sims=n_sims, hard_switch=hard_switch
+        c=c, alpha=alpha, rounds=rounds, n_sims=n_sims,
+        hard_switch=hard_switch, listener_cls=listener_cls
     )
     switched_by_round = np.zeros(rounds)
     for res in results:
@@ -718,7 +880,8 @@ def estimate_fpr(thetas, psis, semantics, world, c=1.0, alpha=1.0,
 
 
 def estimate_tpr(thetas, psis, semantics, world, speaker_type="high",
-                 c=1.0, alpha=1.0, rounds=20, n_sims=200, hard_switch=True):
+                 c=1.0, alpha=1.0, rounds=20, n_sims=200, hard_switch=True,
+                 listener_cls=None):
     """Estimate TPR(c, t) = P(switched by round t | psi=persuasive) by simulation.
 
     Returns
@@ -728,7 +891,8 @@ def estimate_tpr(thetas, psis, semantics, world, speaker_type="high",
     """
     results = simulate_suspicion_listener(
         thetas, psis, semantics, world, speaker_type=speaker_type,
-        c=c, alpha=alpha, rounds=rounds, n_sims=n_sims, hard_switch=hard_switch
+        c=c, alpha=alpha, rounds=rounds, n_sims=n_sims,
+        hard_switch=hard_switch, listener_cls=listener_cls
     )
     switched_by_round = np.zeros(rounds)
     for res in results:

@@ -17,7 +17,9 @@ from .listener_switch import (
     Listener2Switch,
     SuspicionSwitchListenerS0,
     SuspicionSwitchListener,
+    DiscrepancySwitchListener,
     simulate_suspicion_listener,
+    simulate_comparison,
     estimate_fpr,
     estimate_tpr,
 )

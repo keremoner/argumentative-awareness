@@ -1,0 +1,128 @@
+% -----------------------------------------------------------------------------
+% Posterior-predictive formalization of the suspicion and discrepancy scores.
+% Self-contained section; assumes amsmath, amssymb, amsthm.
+% -----------------------------------------------------------------------------
+
+\section{Posterior-predictive view of suspicion and discrepancy}
+\label{sec:posterior-predictive}
+
+\paragraph{Shared machinery.}
+At round $t$, the listener observes utterance $u^{(t)}$ and holds a
+\emph{literal} belief $L_0^{(t-1)}(\theta)$ over world parameters carried
+forward from the previous round.  This induces a prior over observations
+\begin{equation}
+  P_{L_0}^{(t)}(O) \;=\; \sum_{\theta} P(O\mid\theta)\, L_0^{(t-1)}(\theta),
+  \label{eq:prior-O}
+\end{equation}
+and, through the informative pragmatic speaker
+$S_1^{\mathrm{inf}}(u\mid O)$, a joint predictive over $(O,u)$ whose
+utterance marginal is
+\begin{equation}
+  P_{\mathrm{pred}}^{(t)}(u) \;=\; \sum_{O} S_1^{\mathrm{inf}}(u\mid O)\, P_{L_0}^{(t)}(O),
+  \qquad
+  P^{(t)}(O\mid u) \;=\; \frac{S_1^{\mathrm{inf}}(u\mid O)\, P_{L_0}^{(t)}(O)}{P_{\mathrm{pred}}^{(t)}(u)}.
+  \label{eq:pred-and-post}
+\end{equation}
+Both scores introduced below are built from exactly these ingredients and
+differ only in \emph{which} distribution over $O$ is used and \emph{in what
+order} the log and the $O$-marginalization are applied.  We suppress the
+round index $t$ where it is not essential.
+
+\paragraph{Discrepancy score (log-of-expectation; prior over $O$).}
+The discrepancy score treats $P_{\mathrm{pred}}$ as a direct posterior-predictive
+distribution over utterances and scores the observed $u$ by its centered
+self-information:
+\begin{equation}
+  \boxed{\;
+    \mathrm{disc}(u) \;=\; \underbrace{-\log \sum_{O} S_1^{\mathrm{inf}}(u\mid O)\, P_{L_0}(O)}_{-\log P_{\mathrm{pred}}(u)}
+                 \;-\; H\!\bigl(P_{\mathrm{pred}}\bigr).\;}
+  \label{eq:disc}
+\end{equation}
+The first term marginalizes $O$ under the \emph{prior} $P_{L_0}$ \emph{inside} the log;
+$H(P_{\mathrm{pred}})=-\sum_u P_{\mathrm{pred}}(u)\log P_{\mathrm{pred}}(u)$
+is the self-entropy of the predictive distribution and guarantees
+$\mathbb{E}_{u\sim P_{\mathrm{pred}}}[\mathrm{disc}(u)] = 0$.
+
+\paragraph{Suspicion score (expectation-of-log; posterior over $O$).}
+The suspicion score instead inverts $S_1^{\mathrm{inf}}$ to a posterior
+$P(O\mid u)$ and averages the \emph{conditional} excess surprise of $u$
+against a \emph{conditional} entropy baseline:
+\begin{equation}
+  \boxed{\;
+    \mathrm{sus}(u) \;=\; \sum_{O} P(O\mid u)\, \Bigl[\,
+         \underbrace{-\log S_1^{\mathrm{inf}}(u\mid O)}_{\text{conditional surprise}}
+         \;-\; \underbrace{H\!\bigl(S_1^{\mathrm{inf}}(\cdot\mid O)\bigr)}_{\text{conditional entropy}}
+       \Bigr].\;}
+  \label{eq:sus}
+\end{equation}
+Marginalization over $O$ is performed \emph{outside} the log, using the
+\emph{posterior} $P(O\mid u)$ from \eqref{eq:pred-and-post}.  Under the null
+($\psi=\mathrm{inf}$), $\mathbb{E}[\mathrm{sus}(u)]=0$ because
+$\mathbb{E}_{u\sim S_1(\cdot\mid O)}[-\log S_1(u\mid O)] = H(S_1(\cdot\mid O))$
+for each $O$.
+
+\paragraph{Side-by-side structure.}
+Both scores decompose into a surprise term minus an entropy baseline, but
+with three aligned design choices flipped:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{lll}
+\toprule
+ & \textbf{Discrepancy} \eqref{eq:disc} & \textbf{Suspicion} \eqref{eq:sus} \\
+\midrule
+Distribution over $O$ & prior $P_{L_0}(O)$ & posterior $P(O\mid u)$ \\
+Log / $O$-marginal order & $-\log \mathbb{E}_O[\,\cdot\,]$ & $\mathbb{E}_O[-\log \cdot\,]$ \\
+Entropy baseline         & $H(P_{\mathrm{pred}})$ (marginal over $u$) & $\mathbb{E}_{O\mid u}[\,H(S_1(\cdot\mid O))\,]$ (conditional) \\
+Null calibration         & over repeated $u\sim P_{\mathrm{pred}}$ & over repeated $u\sim S_1(\cdot\mid O)$ for each $O$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Exact relationship.}
+The two raw surprise terms are linked by a single Bayes identity.
+Applying $-\log$ to \eqref{eq:pred-and-post} gives
+\(
+  -\log S_1^{\mathrm{inf}}(u\mid O) = -\log P_{\mathrm{pred}}(u) - \log\frac{P(O\mid u)}{P_{L_0}(O)},
+\)
+and averaging over $P(O\mid u)$ yields
+\begin{equation}
+  \underbrace{\mathbb{E}_{O\sim P(O\mid u)}\!\bigl[-\log S_1^{\mathrm{inf}}(u\mid O)\bigr]}_{\text{raw suspicion surprise}}
+  \;=\;
+  \underbrace{-\log P_{\mathrm{pred}}(u)}_{\text{raw discrepancy surprise}}
+  \;-\;
+  \mathrm{KL}\!\bigl(P(\cdot\mid u)\,\|\,P_{L_0}\bigr).
+  \label{eq:raw-relation}
+\end{equation}
+Equation~\eqref{eq:raw-relation} is the key identity.  The log-of-expectation
+(discrepancy) and the expectation-of-log-under-the-posterior (suspicion)
+differ by exactly the information gain
+$\mathrm{KL}(P(\cdot\mid u)\,\|\,P_{L_0})$ that $u$ delivers about $O$; the
+sign is negative because the posterior upweights exactly those $O$ under
+which $u$ is \emph{less} surprising.
+
+Plugging \eqref{eq:raw-relation} into \eqref{eq:sus} and using
+\eqref{eq:disc} gives the centered relation
+\begin{equation}
+  \mathrm{sus}(u) \;=\; \mathrm{disc}(u)
+  \;-\; \mathrm{KL}\!\bigl(P(\cdot\mid u)\,\|\,P_{L_0}\bigr)
+  \;+\; \underbrace{\Bigl[\,H(P_{\mathrm{pred}}) - \mathbb{E}_{O\mid u}\!\bigl[H(S_1(\cdot\mid O))\bigr]\Bigr]}_{\Delta H(u)\ \text{(baseline gap)}}.
+  \label{eq:centered-relation}
+\end{equation}
+The two tests therefore rank utterances by the \emph{same} predictive
+surprise, offset by two utterance-dependent corrections that capture
+how informative $u$ is about $O$ (the KL) and how its predictive entropy
+compares to the speaker's average conditional entropy (the baseline gap).
+When $u$ is weakly informative about $O$, $P(\cdot\mid u)\approx P_{L_0}$,
+the KL vanishes, and by Jensen the baseline gap is small and non-negative,
+so suspicion and discrepancy coincide up to higher-order terms.  The two
+diverge precisely when $u$ is \emph{sharply diagnostic} of some $O$ — the
+regime in which a persuasive speaker is most detectable.
+
+\paragraph{Implementation correspondence.}
+Equation~\eqref{eq:sus} is computed by
+\texttt{SuspicionSwitchListener.\_compute\_sus\_and\_var}, and
+Equation~\eqref{eq:disc} by
+\texttt{DiscrepancySwitchListener.\_compute\_sus\_and\_var}; both return the
+centered score and its null varentropy for use in the cumulative test
+$\mathrm{Sus}(t) > c\,\sigma(t)/\sqrt{t}$.
