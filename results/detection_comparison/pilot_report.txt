@@ -1,0 +1,24 @@
+=== Detection comparison (pilot) ===
+theta space: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+test_thetas: [0.3, 0.5, 0.7]
+speaker types: ['inf', 'high', 'low']
+psi: ['inf', 'high', 'low']   alpha: 3.0   c: 2.0
+rounds: 50   n_sims per cond: 20
+
+-- speaker ψ=inf
+      θ   cross%_surp2   cross%_surp1     cross%_sus | median_τ_surp2 median_τ_surp1   median_τ_sus
+    0.3           20.0            0.0            5.0 |           14.5            nan           41.0
+    0.5            5.0            5.0            5.0 |           23.0            3.0            2.0
+    0.7            5.0            0.0            5.0 |            2.0            nan            2.0
+
+-- speaker ψ=high
+      θ   cross%_surp2   cross%_surp1     cross%_sus | median_τ_surp2 median_τ_surp1   median_τ_sus
+    0.3           80.0           90.0          100.0 |           10.5            2.0            2.0
+    0.5           80.0          100.0          100.0 |           17.0            3.0            2.0
+    0.7           20.0           30.0           60.0 |            4.5           18.5           10.0
+
+-- speaker ψ=low
+      θ   cross%_surp2   cross%_surp1     cross%_sus | median_τ_surp2 median_τ_surp1   median_τ_sus
+    0.3           25.0           30.0           70.0 |            2.0            3.0            6.5
+    0.5           90.0          100.0          100.0 |           20.5           11.5            7.5
+    0.7           65.0           75.0           85.0 |           11.0            3.0            2.0
