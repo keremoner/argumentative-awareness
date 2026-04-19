@@ -15,6 +15,9 @@ from .scores import (
     compute_surp2,
     compute_surp1,
     compute_sus,
+    make_sus_variant,
+    SUS_VARIANTS,
+    SUS_VARIANT_FNS,
     SCORE_FNS,
 )
 from .sequential_test import SequentialTest
@@ -25,6 +28,9 @@ __all__ = [
     "compute_surp2",
     "compute_surp1",
     "compute_sus",
+    "make_sus_variant",
+    "SUS_VARIANTS",
+    "SUS_VARIANT_FNS",
     "SCORE_FNS",
     "SequentialTest",
     "DetectionListener",

@@ -1,0 +1,43 @@
+{
+  "theta_space": [
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1.0
+  ],
+  "psis": [
+    "inf",
+    "high",
+    "low"
+  ],
+  "null_thetas": [
+    0.1,
+    0.3,
+    0.5,
+    0.7,
+    0.9
+  ],
+  "alt_thetas": [
+    0.5
+  ],
+  "alt_psis": [
+    "high",
+    "low"
+  ],
+  "alpha": 3.0,
+  "c": 2.0,
+  "rounds": 30,
+  "n_sims": 10,
+  "seed": 0,
+  "n": 1,
+  "m": 7,
+  "out_dir": "results/group1_smoke",
+  "workers": 4
+}
