@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python.exe experiments/sus_variants/analyze_fpr_tpr.py --in_dir results/sus_variants_smoke)",
+      "Bash(.venv/Scripts/python.exe experiments/sus_variants/analyze_variance.py --in_dir results/sus_variants_smoke)",
+      "Bash(.venv/Scripts/python.exe experiments/sus_variants/analyze_comparison.py --in_dir results/sus_variants_smoke)"
+    ]
+  }
+}

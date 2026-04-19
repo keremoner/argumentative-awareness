@@ -1,0 +1,62 @@
+{
+  "grid": {
+    "theta_stars": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "psi_trues": [
+      "inf",
+      "pers+",
+      "pers-"
+    ],
+    "alphas": [
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      4.0,
+      5.0,
+      7.0,
+      10.0,
+      15.0,
+      20.0
+    ],
+    "n": 1,
+    "m": 7,
+    "speaker_level": "S1",
+    "rounds": 20,
+    "n_sims_per_cell": 5,
+    "n_cells": 297
+  },
+  "seed_base": 0,
+  "theta_space": [
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1.0
+  ],
+  "psi_label_map": {
+    "inf": "inf",
+    "pers+": "high",
+    "pers-": "low"
+  },
+  "git_hash": "8e1fa0da1a3595ff1dff5862eca4a87880bea394",
+  "wall_seconds": 42.05337333679199,
+  "total_trajectory_rows": 29700,
+  "run_date_utc": "2026-04-19T13:52:23Z"
+}

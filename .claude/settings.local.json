@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(d:/Research/argumentative-awareness/.venv/Scripts/python.exe -c \"import pyarrow; print\\(pyarrow.__version__\\)\")",
+      "Bash(d:/Research/argumentative-awareness/.venv/Scripts/python.exe -c \"import pandas; print\\(pandas.__version__\\)\")",
+      "Bash(d:/Research/argumentative-awareness/.venv/Scripts/python.exe -m pip install pyarrow)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/run_sims.py --smoke --workers 4)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/analyze_1_1.py --in_dir results/group1_smoke)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/analyze_1_2.py --in_dir results/group1_smoke)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/analyze_1_3.py --in_dir results/group1_smoke)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/analyze_1_4.py --in_dir results/group1_smoke)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/run_sims.py)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/analyze_1_1.py)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/analyze_1_2.py)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/analyze_1_3.py)",
+      "Bash(.venv/Scripts/python.exe experiments/group1/analyze_1_4.py)",
+      "Read(//c/Users/onerk/.claude/projects/d--Research-argumentative-awareness/**)",
+      "Read(//c/Users/onerk/.claude/projects/**)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/ -q)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_sus_variants.py -v)"
+    ]
+  }
+}

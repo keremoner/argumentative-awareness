@@ -13,6 +13,7 @@ from copy import deepcopy
 import numpy as np
 
 from ..core import Belief
+from ..listener0 import Listener0
 from ..listener1 import Listener1
 from .scores import ScoreContext
 
@@ -48,6 +49,11 @@ class DetectionListener:
             self.thetas, ["inf"], speaker, world, semantics,
             listener_type="inf", alpha=alpha,
         )
+        # Internal literal listener, updated in parallel with ``naive`` so
+        # that variant scores that depend on L_0 (sus_4, sus_4b) can use
+        # the listener's own L_0 rather than a shared external instance.
+        self.naive_l0 = Listener0(self.thetas, speaker.listener.speaker,
+                                  world, semantics)
         self.vigilant = None
         self.switched = False
         self.switched_at = None
@@ -66,6 +72,11 @@ class DetectionListener:
         theta_dict = self.naive.marginal_theta()
         return np.array([theta_dict.get(t, 0.0) for t in self.thetas], dtype=float)
 
+    def _l0_theta_array(self):
+        """L0^(t)(theta) as an ndarray aligned with ``self.thetas``."""
+        theta_dict = self.naive_l0.state_belief.as_dict()
+        return np.array([theta_dict.get(t, 0.0) for t in self.thetas], dtype=float)
+
     def build_context(self, u_obs):
         """Construct a ScoreContext from the *current* naive listener state.
 
@@ -74,6 +85,7 @@ class DetectionListener:
         return ScoreContext(
             self.thetas, self.speaker, self.world, self.semantics,
             self._l1_theta_array(), u_obs,
+            l0_theta=self._l0_theta_array(),
         )
 
     def update(self, utt):
@@ -90,6 +102,7 @@ class DetectionListener:
                     self.switch_driver = test
 
             self.naive.update(utt)
+            self.naive_l0.update(utt)
 
             if self.switch_driver is not None and self.switch_driver.tau == t:
                 self._trigger_switch(self.switch_driver.switch_type)
