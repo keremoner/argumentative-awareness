@@ -11,10 +11,10 @@ venv/
 .ipynb_checkpoints/
 
 # Raw simulation data (large; regenerate via experiments/*/run_*.py)
-results/**/trajectories/
-results/**/simulations/
-results/**/raw_trajectories.parquet
-results/**/raw_*.parquet
+# results/**/trajectories/
+# results/**/simulations/
+# results/**/raw_trajectories.parquet
+# results/**/raw_*.parquet
 
 # Smoke-test outputs (throwaway)
 results/*_smoke/
