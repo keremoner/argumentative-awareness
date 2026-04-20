@@ -250,12 +250,28 @@ def run_sweep(cfg: Config, resume: bool = True):
             for sim in range(cfg.n_sims):
                 futures.append(ex.submit(run_single, (c, sim, cfg_dict)))
 
+        total_sims = len(futures)
+        heartbeat_every = max(1, total_sims // 200)
+        print(f"submitted {total_sims} sims across {len(pending_cells)} cells; "
+              f"heartbeat every {heartbeat_every} sims", flush=True)
+
         n_done_cells = 0
+        n_done_sims = 0
         for fut in as_completed(futures):
             cell_id, rows, sim_meta = fut.result()
             cell_rows[cell_id].extend(rows)
             cell_meta[cell_id].append(sim_meta)
             pending_by_cell[cell_id] -= 1
+            n_done_sims += 1
+            if n_done_sims % heartbeat_every == 0 and pending_by_cell[cell_id] != 0:
+                elapsed = time.time() - t_start
+                rate = n_done_sims / elapsed if elapsed > 0 else 0
+                eta = ((total_sims - n_done_sims) / rate
+                       if rate > 0 else float("inf"))
+                print(f"    sims [{n_done_sims}/{total_sims}]  "
+                      f"cells [{n_done_cells}/{len(pending_cells)}]  "
+                      f"rate={rate:.2f} sim/s  "
+                      f"elapsed={elapsed:.0f}s  eta={eta:.0f}s", flush=True)
             if pending_by_cell[cell_id] == 0:
                 df = pd.DataFrame(cell_rows[cell_id])
                 df.to_parquet(_shard_path(cfg.out_dir, cell_id), index=False)

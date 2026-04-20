@@ -1,0 +1,393 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+% --- shared notation ------------------------------------------------------
+\newcommand{\Obs}{O}                 % observation
+\newcommand{\Utt}{u}                 % utterance
+\newcommand{\UttSet}{\mathcal{U}}
+\newcommand{\ObsSet}{\mathcal{O}}
+\newcommand{\Truth}{\mathrm{Truth}}
+\newcommand{\Inf}{\mathrm{Inf}}
+\newcommand{\Pers}{\mathrm{PersStr}}
+\newcommand{\SZero}{S_0}
+\newcommand{\LZero}{L_0}
+\newcommand{\SOne}{S_1}
+\newcommand{\LOne}{L_1}
+\newcommand{\Pspk}[2]{P^{(#2)}_{#1}}
+\newcommand{\Ent}{H}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Inffn}{\mathrm{inf}}
+
+\title{Detecting Persuasive Speakers from a Credulous Listener's View\\
+       \large Mathematical Summary}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent
+This note fixes notation and restates the RSA opinion-dynamics setup of
+Fang (2025), then introduces the sequential detection extension the full
+sweep is built around. We keep only the scores the sweep records: the
+prior-predictive surprisal \texttt{surp2} and the suspicion score
+\texttt{sus\_1} with its law-of-total-variance corrected variance. Code
+symbols appear in \texttt{typewriter} when useful.
+
+% =========================================================================
+\section{World, observations, utterances}
+
+\paragraph{World.} A population of patients shares a latent per-session
+improvement rate
+\[
+    \theta \in \Theta = \{0.1, 0.2, \ldots, 0.9\},
+    \qquad
+    o \sim \mathrm{Bernoulli}(\theta).
+\]
+An observation \(\Obs\) is a hierarchy of $n$ patients $\times$ $m$
+sessions. Because order is irrelevant, $\Obs$ is a sufficient statistic:
+\[
+    \Obs \equiv \langle n_0, n_1, \ldots, n_m\rangle,
+    \qquad
+    n_k = \sum_{i=1}^n \ind\!\left\{\sum_{j=1}^m o_{i,j} = k\right\},
+    \qquad
+    \sum_{k=0}^m n_k = n.
+\]
+In the full-sweep experiment we use $n=1$, $m=7$, so $\Obs$ reduces to
+the per-patient success count.
+
+\paragraph{Utterance space.} With $n = 1$,
+\[
+    \UttSet \;=\; \{\,(q, p) : q \in Q,\ p \in P\,\},
+    \qquad
+    Q = \{\text{none, some, most, all}\},\
+    P = \{\text{ineffective, effective}\}.
+\]
+The truth condition
+\[
+    \Truth(\Utt; \Obs) =
+    \begin{cases}
+        1, & \Obs \in \llbracket \Utt \rrbracket, \\
+        0, & \text{otherwise},
+    \end{cases}
+\]
+encodes the usual quantifier semantics (\emph{none}: $k=0$; \emph{some}:
+$k \ge 1$; \emph{most}: $k > m/2$; \emph{all}: $k = m$).
+
+% =========================================================================
+\section{Base RSA agents}
+
+All belief updates share the same sequential-Bayes template:
+$P^{(0)}$ is a user-specified prior and $P^{(t)}(\cdot) = P^{(t-1)}(\cdot \mid \text{signal at } t-1)$.
+
+\paragraph{Literal speaker $\SZero$.}
+\[
+    P_{\SZero}(\Utt \mid \Obs) \;\propto\; \Truth(\Utt; \Obs).
+\]
+
+\paragraph{Literal listener $\LZero$.}
+\[
+    \Pspk{\LZero}{t}(\theta \mid \Utt^{(t)})
+    \;\propto\; \Pspk{\LZero}{t}(\theta) \,
+    \sum_{\Obs'} P_{\SZero}(\Utt^{(t)} \mid \Obs')\, P(\Obs' \mid \theta).
+\]
+
+\paragraph{Pragmatic speaker $\SOne$ with goal $\psi$ and rationality $\alpha$.}
+Let $\omega \in \{\text{coop},\text{strat}\}$ be the world type and
+$\psi \in \Psi(\omega)$ where
+\(
+    \Psi(\mathrm{coop}) = \{\Inffn\},\
+    \Psi(\mathrm{strat}) = \{\text{pers}^{-}, \Inffn, \text{pers}^{+}\}.
+\)
+The softmax utterance policy is
+\begin{align}
+    \Pspk{\SOne}{t}(\Utt \mid \Obs^{(t)}, \psi, \alpha)
+    &\;\propto\;
+    \Truth(\Utt;\Obs^{(t)}) \cdot
+    \Inf^{(t)}_{\SOne}(\Utt; \Obs^{(t)})^{\alpha\beta}
+    \cdot \Pers^{(t)}_{\SOne}(\Utt; \psi)^{\alpha(1-\beta)},
+    \label{eq:s1-policy}
+\end{align}
+with $\beta = \ind\{\psi = \Inffn\}$, and
+\begin{align*}
+    \Inf^{(t)}_{\SOne}(\Utt; \Obs) &= \Pspk{\LZero}{t}(\Obs \mid \Utt), \\
+    \Pers^{(t)}_{\SOne}(\Utt; \psi) &=
+    \begin{cases}
+        \E^{(t)}_{\LZero}[\theta \mid \Utt], & \psi = \text{pers}^{+}, \\
+        1 - \E^{(t)}_{\LZero}[\theta \mid \Utt], & \psi = \text{pers}^{-}, \\
+        1, & \psi = \Inffn.
+    \end{cases}
+\end{align*}
+
+\paragraph{Pragmatic listener $\LOne$.}
+$\LOne$ maintains a joint posterior over $(\theta, \psi, \alpha)$ by
+inverting $\SOne$:
+\begin{align}
+    \Pspk{\LOne}{t}(\theta,\psi,\alpha \mid \Utt^{(t)})
+    &\;\propto\;
+    \Pspk{\LOne}{t}(\theta,\psi,\alpha) \cdot
+    \Pspk{\SOne}{t}(\Utt^{(t)} \mid \theta, \psi, \alpha)
+    \label{eq:l1-posterior}\\
+    &= \Pspk{\LOne}{t}(\theta,\psi,\alpha) \cdot
+    \sum_{\Obs'} \Pspk{\SOne}{t}(\Utt^{(t)} \mid \Obs', \psi, \alpha)\,
+                 P(\Obs' \mid \theta).
+    \notag
+\end{align}
+The initial prior over $\psi$ separates the two world types:
+\[
+    \Pspk{\LOne}{0}(\psi \mid \omega = \mathrm{coop})
+    = \ind\{\psi = \Inffn\},
+    \qquad
+    \Pspk{\LOne}{0}(\psi \mid \omega = \mathrm{strat})
+    = \tfrac{1}{3}\ \text{for each } \psi \in \Psi(\mathrm{strat}).
+\]
+The marginal $\theta$-belief is
+$\Pspk{\LOne}{t}(\theta \mid \Utt^{(t)}) = \sum_{\psi',\alpha'} \Pspk{\LOne}{t}(\theta, \psi', \alpha' \mid \Utt^{(t)})$.
+
+% =========================================================================
+\section{The credulous-listener extension}
+
+\paragraph{Setting.} The full-sweep study fixes the listener to the
+\emph{credulous} instance
+\(
+    \LOne^{\Inffn} := \LOne(\omega = \mathrm{coop}),
+\)
+i.e. the listener whose prior $\Pspk{\LOne}{0}(\psi) = \ind\{\psi = \Inffn\}$
+places all mass on an informative speaker. In the code this is the
+\texttt{DetectionListener}'s internal \texttt{naive} listener; it is
+exactly the \(L_1\)-\texttt{coop} of the paper.
+
+The data-generating speaker is an $\SOne$ with goal
+\(
+    \psi^{\star} \in \{\Inffn, \text{pers}^{+}, \text{pers}^{-}\}
+\)
+(\texttt{psi\_true} in the sweep) and rationality
+$\alpha \in \{1, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20\}$
+(\texttt{alpha}). The listener's internal speaker model is always
+$\SOne(\cdot \mid \cdot, \Inffn, \alpha)$; whenever $\psi^{\star} \neq
+\Inffn$ the listener's generative model is misspecified. The null
+hypothesis for detection is
+\[
+    H_0 : \psi^{\star} = \Inffn, \qquad
+    H_A : \psi^{\star} \in \{\text{pers}^{+}, \text{pers}^{-}\}.
+\]
+
+\paragraph{Round-$t$ belief state.} The listener's $\theta$-marginal is
+$\Pspk{\LOne^{\Inffn}}{t}(\theta)$ and its push-forward to observations
+is
+\begin{equation}
+    \Pspk{\LOne^{\Inffn}}{t}(\Obs)
+    \;=\; \sum_{\theta'} P(\Obs \mid \theta')\,
+          \Pspk{\LOne^{\Inffn}}{t}(\theta').
+    \label{eq:listener-marginals}
+\end{equation}
+The listener's internal speaker model is $\Pspk{\SOne}{t}(\Utt \mid \Obs, \Inffn, \alpha)$.
+Inverting it through Bayes' rule gives the listener's posterior over
+observations,
+\[
+    \Pspk{\LOne^{\Inffn}}{t}(\Obs \mid \Utt)
+    \;=\;
+    \frac{\Pspk{\SOne}{t}(\Utt \mid \Obs, \Inffn, \alpha)\,
+          \Pspk{\LOne^{\Inffn}}{t}(\Obs)}
+         {\sum_{\Obs'} \Pspk{\SOne}{t}(\Utt \mid \Obs', \Inffn, \alpha)\,
+          \Pspk{\LOne^{\Inffn}}{t}(\Obs')},
+\]
+and the prior predictive over utterances,
+\[
+    \Pspk{\mathrm{prior}}{t}(\Utt)
+    \;=\; \sum_{\Obs}
+    \Pspk{\SOne}{t}(\Utt \mid \Obs, \Inffn, \alpha)\,
+    \Pspk{\LOne^{\Inffn}}{t}(\Obs).
+\]
+(Code: \texttt{ScoreContext.L1\_theta}, \texttt{L1\_O}, \texttt{S1\_table},
+\texttt{L1\_O\_given\_u}, \texttt{P\_prior}.)
+
+% =========================================================================
+\section{Detection scores}
+
+Both scores are functions of one round's \(\Utt^{(t)}\) and the current
+listener context. Under $H_0$, both have mean zero.
+
+\subsection*{Prior-predictive surprisal (\texttt{surp2})}
+
+The round-$t$ score is the centred log-loss of $\Utt^{(t)}$ under the
+prior predictive:
+\begin{align}
+    s^{(t)}_{\texttt{surp2}}
+    &\;=\; -\log \Pspk{\mathrm{prior}}{t}(\Utt^{(t)})
+        \;-\; \Ent\!\left(\Pspk{\mathrm{prior}}{t}\right),
+    \label{eq:surp2-score}\\
+    \sigma^{2,(t)}_{\texttt{surp2}}
+    &\;=\;
+    \Var_{\Utt \sim \Pspk{\mathrm{prior}}{t}}\!\bigl[-\log \Pspk{\mathrm{prior}}{t}(\Utt)\bigr].
+    \label{eq:surp2-var}
+\end{align}
+Under $H_0$, $\Utt^{(t)} \sim \Pspk{\mathrm{prior}}{t}$, so
+$\E[s^{(t)}_{\texttt{surp2}}] = 0$ and $\Var[s^{(t)}_{\texttt{surp2}}]
+= \sigma^{2,(t)}_{\texttt{surp2}}$ (code: \texttt{compute\_surp2}).
+
+\subsection*{Suspicion score (\texttt{sus\_1})}
+
+The round-$t$ score is the surprisal of $\Utt^{(t)}$ under the listener's
+internal speaker model, centred per-$\Obs$ and averaged over the
+listener's posterior $\Pspk{\LOne^{\Inffn}}{t}(\Obs \mid \Utt^{(t)})$:
+\begin{align}
+    s^{(t)}_{\texttt{sus}}
+    &\;=\;
+    \sum_{\Obs}
+    \Pspk{\LOne^{\Inffn}}{t}(\Obs \mid \Utt^{(t)})
+    \Bigl[
+        -\log \Pspk{\SOne}{t}(\Utt^{(t)} \mid \Obs, \Inffn, \alpha)
+        \;-\;
+        \Ent\!\left(\Pspk{\SOne}{t}(\cdot \mid \Obs, \Inffn, \alpha)\right)
+    \Bigr].
+    \label{eq:sus-score}
+\end{align}
+For each fixed $\Obs$ the bracketed quantity has mean zero under
+$\Pspk{\SOne}{t}(\cdot \mid \Obs, \Inffn, \alpha)$, so
+$\E[s^{(t)}_{\texttt{sus}}] = 0$ under $H_0$.
+
+The variance of $s^{(t)}_{\texttt{sus}}$ needs a law-of-total-variance
+correction: since $\Obs$ is unobserved, the expected per-$\Obs$
+varentropy overstates the variance by the variance of the conditional
+mean over $\Obs$. The recorded variance is
+\begin{align}
+    \sigma^{2,(t)}_{\texttt{sus}}
+    &\;=\;
+    \sum_{\Obs}
+        \Pspk{\LOne^{\Inffn}}{t}(\Obs \mid \Utt^{(t)})\,
+        \Var_{\Utt' \sim \Pspk{\SOne}{t}(\cdot \mid \Obs, \Inffn, \alpha)}
+        \!\bigl[-\log \Pspk{\SOne}{t}(\Utt' \mid \Obs, \Inffn, \alpha)\bigr]
+    \notag \\
+    &\quad
+    -\ \sum_{\Utt'} \Pspk{\mathrm{prior}}{t}(\Utt')\,
+        \Var_{\Obs' \sim \Pspk{\LOne^{\Inffn}}{t}(\cdot \mid \Utt')}
+        \!\Bigl[
+          -\log \Pspk{\SOne}{t}(\Utt' \mid \Obs', \Inffn, \alpha)
+          - \Ent\!\left(\Pspk{\SOne}{t}(\cdot \mid \Obs', \Inffn, \alpha)\right)
+        \Bigr],
+    \label{eq:sus-var}
+\end{align}
+clipped at zero. (Code: \texttt{make\_sus\_variant("1")} and
+\texttt{\_weighting\_matrix} in \texttt{rsa/detection/scores.py}; column
+\texttt{sus1\_sigma2\_corrected}.)
+
+\paragraph{Code $\leftrightarrow$ math map.}
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+symbol & column in \texttt{trajectories.parquet} \\
+\midrule
+$s^{(t)}_{\texttt{surp2}}$                        & \texttt{surp2\_score} \\
+$\sigma^{2,(t)}_{\texttt{surp2}}$                 & \texttt{surp2\_sigma2} \\
+$s^{(t)}_{\texttt{sus}}$                          & \texttt{sus1\_score} \\
+$\sigma^{2,(t)}_{\texttt{sus}}$                   & \texttt{sus1\_sigma2\_corrected} \\
+$\mathrm{Sus}^{(t)}_{\texttt{surp2}}$             & \texttt{surp2\_Sus} \\
+$\mathrm{Sus}^{(t)}_{\texttt{sus}}$               & \texttt{sus1\_Sus} \\
+$\bar{\sigma}^{2,(t)}$                            & \texttt{*\_sigma\_bar2*} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =========================================================================
+\section{Sequential test}
+
+For a score $s^{(t)}$ with round-wise null variance $\sigma^{2,(t)}$,
+define the running mean and running average variance
+\begin{align}
+    \mathrm{Sus}^{(t)}
+    &\;=\;
+    \frac{1}{t}\sum_{i=1}^{t} s^{(i)},
+    & \bar{\sigma}^{2,(t)}
+    &\;=\;
+    \frac{1}{t}\sum_{i=1}^{t} \sigma^{2,(i)}.
+    \label{eq:running}
+\end{align}
+The rejection rule fires the first time
+\begin{align}
+    \mathrm{Sus}^{(t)}
+    &\;>\;
+    c\, \frac{\bar{\sigma}^{(t)}}{\sqrt{t}},
+    \label{eq:crossing}
+\end{align}
+where $c$ is a fixed z-cutoff. The sweep runs the test as a pure
+observer ($c = +\infty$, no crossing) so downstream analyses can
+recompute FPR/TPR for arbitrary $c$.
+
+\paragraph{Null behaviour.} Under $H_0$, each $s^{(t)}$ has mean $0$, so
+$\mathrm{Sus}^{(t)} \to 0$. If the $s^{(t)}$ were i.i.d.\ with variance
+$\sigma^{2}$, $\Var[\mathrm{Sus}^{(t)}] = \sigma^{2}/t$ — the $1/t$
+scaling that the diagnostics notebook checks (D3). In practice the
+round-wise scores are weakly dependent (they share the same trajectory
+of listener beliefs), so \eqref{eq:running} tracks this scaling only up
+to a finite-sample auto-correlation correction. The corrected variance
+\eqref{eq:sus-var} targets the leading-order variance of $s^{(t)}$
+conditional on the round's history.
+
+% =========================================================================
+\section{Full-sweep experiment}
+
+\paragraph{Grid.} The sweep factorises as
+\[
+    \underbrace{\{0.1, \ldots, 0.9\}}_{\theta^{\star}\,(9)}
+    \;\times\;
+    \underbrace{\{\Inffn, \text{pers}^{+}, \text{pers}^{-}\}}_{\psi^{\star}\,(3)}
+    \;\times\;
+    \underbrace{\{1, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20\}}_{\alpha\,(11)}
+    \;=\; 297 \text{ cells.}
+\]
+Each cell runs 200 independent simulations of $T = 150$ rounds; world is
+fixed at $n = 1$, $m = 7$, speaker level $\SOne$, listener
+$\LOne^{\Inffn}$. Each round records, for both \texttt{surp2} and
+\texttt{sus\_1}: the raw score, its variance, the running mean
+$\mathrm{Sus}^{(t)}$, and the running average variance
+$\bar{\sigma}^{2,(t)}$, together with the full $\LOne(\theta)$ and
+$\LZero(\theta)$ belief vectors. The resulting dataset has
+$297 \times 200 \times 150 = 8\,910\,000$ trajectory rows.
+
+\paragraph{What the scores should look like.} Under $H_0$
+($\psi^{\star} = \Inffn$), the generative model matches the listener's
+internal model, so:
+\begin{itemize}[leftmargin=1.4em]
+    \item $\E[s^{(t)}] = 0$ for both scores, hence $\mathrm{Sus}^{(t)} \to 0$ as $t \to \infty$.
+    \item $\Var\!\left[s^{(t)}\right] / \E\!\left[\sigma^{2,(t)}\right] \approx 1$ for both scores.
+    \item $\Var\!\left[\mathrm{Sus}^{(t)}\right] \sim 1/t$ modulo finite-sample auto-correlation.
+\end{itemize}
+Under $H_A$ ($\psi^{\star} \in \{\text{pers}^{+}, \text{pers}^{-}\}$), both
+scores acquire a strictly positive mean (the KL-like gap between the
+listener's $\Inffn$-based prior predictive and the true persuasive
+$\SOne$-distribution over utterances), so $\mathrm{Sus}^{(t)}$ drifts up
+with $t$. The detection question is how fast and for which $(\theta^{\star}, \alpha)$.
+
+% =========================================================================
+\section*{Appendix: structural symmetry at level 2 and beyond}
+
+For completeness we record the higher-level recursion in the same
+notation; it is not invoked in the current sweep but matches the code
+path \texttt{rsa.speaker2} and is the generalisation alluded to by Fang
+(2025). For $n \ge 2$:
+\[
+    \Pspk{S_n}{t}(\Utt \mid \Obs^{(t)}, \psi, \alpha)
+    \;=\; \mathrm{SoftMax}\!\left[V^{(t)}_{S_n}(\Utt; \Obs^{(t)}, \psi);\ \alpha\right],
+\]
+with
+\(
+    \Inf^{(t)}_{S_n}(\Utt; \Obs^{(t)})
+    = \sum_{\psi', \alpha'} \Pspk{L_{n-1} \mid \omega}{t}(\Obs^{(t)}, \psi', \alpha' \mid \Utt),
+\)
+and $\Pers^{(t)}_{S_n}$ defined against the level-$(n{-}1)$ listener
+posterior mean of $\theta$. The recursion on the listener side takes the
+same shape as $\LOne$ with $S_n$ replacing $\SOne$ in
+\eqref{eq:l1-posterior}.
+
+\end{document}
