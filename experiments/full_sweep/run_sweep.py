@@ -446,6 +446,12 @@ def main():
     ap.add_argument("--no_resume", action="store_true",
                     help="rerun even if a cell shard exists")
     ap.add_argument("--skip_sanity", action="store_true")
+    ap.add_argument("--only_alpha", type=float, nargs="+", default=None,
+                    help="restrict grid to these alpha values")
+    ap.add_argument("--only_psi", type=str, nargs="+", default=None,
+                    help="restrict grid to these psi_true labels (inf/pers+/pers-)")
+    ap.add_argument("--only_theta", type=float, nargs="+", default=None,
+                    help="restrict grid to these theta_star values")
     args = ap.parse_args()
 
     cfg = Config()
@@ -464,9 +470,22 @@ def main():
 
     os.makedirs(cfg.out_dir, exist_ok=True)
 
+    # Optional grid filter — applied via module globals so build_cell_grid()
+    # (also called inside run_sweep / sanity / config) sees the restricted set.
+    global THETA_STARS, PSI_TRUES, ALPHAS
+    if args.only_theta is not None:
+        THETA_STARS = tuple(float(x) for x in args.only_theta)
+    if args.only_psi is not None:
+        PSI_TRUES = tuple(args.only_psi)
+    if args.only_alpha is not None:
+        ALPHAS = tuple(float(x) for x in args.only_alpha)
+
     n_cells = len(build_cell_grid())
     print(f"cfg: cells={n_cells} n_sims/cell={cfg.n_sims} rounds={cfg.rounds}  "
           f"n={cfg.n} m={cfg.m}  out_dir={cfg.out_dir}", flush=True)
+    if (args.only_alpha or args.only_psi or args.only_theta):
+        print(f"  grid filter: theta={list(THETA_STARS)} "
+              f"psi={list(PSI_TRUES)} alpha={list(ALPHAS)}", flush=True)
 
     total_rows, wall = run_sweep(cfg, resume=not args.no_resume)
     # Combine with any previously-existing shards when reporting totals.
