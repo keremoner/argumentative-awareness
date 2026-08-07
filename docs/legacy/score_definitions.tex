@@ -1,0 +1,118 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+
+\newcommand{\Obs}{O}
+\newcommand{\Utt}{u}
+\newcommand{\SOne}{S_1}
+\newcommand{\Lone}{L_1}
+\newcommand{\Ent}{H}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\surp}{\operatorname{surp}}
+\newcommand{\sus}{\operatorname{sus}}
+\newcommand{\infgoal}{\mathrm{inf}}
+
+\title{The Three Implemented Detection Scores}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+At round $t$, let $q_t(o) = \Lone^{(t)}(o)$ be the credulous listener's
+current distribution over observations and let
+\[
+    k_t(u\mid o) = S_1^{(t)}(u\mid o,\infgoal)
+\]
+be its informative-speaker model.  The code constructs the prior
+predictive distribution and the observation posterior as
+\begin{align*}
+    p_t(u) &= \sum_o k_t(u\mid o)q_t(o), \\
+    q_t(o\mid u) &= \frac{k_t(u\mid o)q_t(o)}{p_t(u)}.
+\end{align*}
+For the posterior-predictive score it additionally constructs
+\[
+    r_t(v\mid u) = \sum_o k_t(v\mid o)q_t(o\mid u).
+\]
+Write $H(a)=-\sum_x a(x)\log a(x)$.  The implementations in
+\texttt{rsa/detection/scores.py} evaluate the following quantities for the
+heard utterance $u_t$.
+
+\section*{Prior-predictive surprisal (\texttt{surp2})}
+
+\[
+    \surp_2^{(t)}(u_t)
+    = -\log p_t(u_t) - H(p_t).
+\]
+This is centred self-information under the listener's prediction before
+hearing the utterance.  Its code-level variance estimate is the
+varentropy of that prediction:
+\[
+    \sigma_{\surp_2,t}^2
+    = \Var_{U\sim p_t}\!\left[-\log p_t(U)\right].
+\]
+Under the informative null, $U\sim p_t$, so
+$\E[\surp_2^{(t)}(U)]=0$.
+
+\section*{Posterior-predictive surprisal (\texttt{surp1})}
+
+\[
+    \surp_1^{(t)}(u_t)
+    = -\log r_t(u_t\mid u_t) - H\!\left(r_t(\cdot\mid u_t)\right).
+\]
+Here the same utterance is used twice: first to update the observation
+distribution from $q_t(o)$ to $q_t(o\mid u_t)$, then to score itself under
+the resulting posterior predictive distribution.  The implemented
+variance is the corresponding conditional varentropy:
+\[
+    \sigma_{\surp_1,t}^2
+    = \Var_{V\sim r_t(\cdot\mid u_t)}
+      \!\left[-\log r_t(V\mid u_t)\right].
+\]
+Unlike \texttt{surp2}, this is a data-dependent conditional reference
+distribution; the code does not assert an unconditional zero-mean identity
+for this score.
+
+\section*{Observation-level suspicion (\texttt{sus})}
+
+For each possible observation, define the conditional excess surprise
+\[
+    b_t(o,u) = -\log k_t(u\mid o) - H\!\left(k_t(\cdot\mid o)\right).
+\]
+The suspicion score averages this quantity using the observation posterior:
+\[
+    \sus^{(t)}(u_t)
+    = \sum_o q_t(o\mid u_t)b_t(o,u_t).
+\]
+Thus \texttt{sus} takes the log before marginalizing over observations,
+whereas \texttt{surp2} marginalizes first.  Its original implemented
+variance is the posterior-weighted conditional varentropy:
+\[
+    \sigma_{\sus,t}^2
+    = \sum_o q_t(o\mid u_t)
+      \Var_{U\sim k_t(\cdot\mid o)}\!\left[-\log k_t(U\mid o)\right].
+\]
+For every fixed $o$, $\E_{U\sim k_t(\cdot\mid o)}[b_t(o,U)]=0$;
+therefore $\texttt{sus}$ has mean zero under the informative null.  The
+later full-sweep pipeline uses \texttt{sus\_1}, which applies a
+law-of-total-variance correction to this variance; see
+\texttt{docs/detection\_math.tex} for that extension.
+
+\section*{Sequential use}
+
+For any score $s_t$ with variance estimate $\sigma_t^2$, the comparison
+experiments accumulate
+\[
+    \overline{s}_t = \frac{1}{t}\sum_{i=1}^t s_i,
+    \qquad
+    \overline{\sigma}_t^2 = \frac{1}{t}\sum_{i=1}^t \sigma_i^2,
+\]
+and flag when
+\[
+    \overline{s}_t > c\,\frac{\overline{\sigma}_t}{\sqrt{t}}.
+\]
+
+\end{document}

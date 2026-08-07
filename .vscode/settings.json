@@ -1,0 +1,8 @@
+{
+  "[typst]": {
+    "editor.defaultFormatter": "myriad-dreamin.tinymist",
+    "editor.formatOnSave": true,
+    "editor.wordWrap": "on"
+  },
+  "tinymist.preview.backgroundColor": "#ffffff"
+}

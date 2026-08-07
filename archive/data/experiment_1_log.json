@@ -1,0 +1,1011 @@
+{
+  "meta": {
+    "id": "2f0f1aba-98a1-4c00-8c69-e6e9625fe2db",
+    "timestamp": "2025-09-16T12:42:39.749220",
+    "params": {
+      "thetas": [
+        0.0,
+        0.1,
+        0.2,
+        0.30000000000000004,
+        0.4,
+        0.5,
+        0.6000000000000001,
+        0.7000000000000001,
+        0.8,
+        0.9,
+        1.0
+      ],
+      "psis": [
+        "inf",
+        "high",
+        "low"
+      ],
+      "semantics": "<__main__.Semantics object at 0x0000024A73A1FD10>",
+      "world": "<__main__.World object at 0x0000024A7133AB90>",
+      "speaker_type": "low",
+      "listener_type": "vig",
+      "alpha": 3.0,
+      "rounds": 40
+    }
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        0,
+        2,
+        2,
+        0,
+        1,
+        0,
+        0
+      ],
+      "utterance": [
+        "none",
+        "all",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 2,
+      "world_theta": 0.3,
+      "observation": [
+        2,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "none",
+        "most",
+        "effective"
+      ]
+    },
+    {
+      "round": 3,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        4,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "most",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 4,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "none",
+        "none",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 5,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        2,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 6,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        0,
+        1,
+        2,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 7,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        2,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "none",
+        "effective"
+      ]
+    },
+    {
+      "round": 8,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "some",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 9,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        3,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "some",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 10,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        1,
+        3,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 11,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        0,
+        3,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 12,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        0,
+        1,
+        2,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "all",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 13,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        1,
+        3,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "none",
+        "all",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 14,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        0,
+        1,
+        2,
+        1,
+        1,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 15,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 16,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        2,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "none",
+        "effective"
+      ]
+    },
+    {
+      "round": 17,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        2,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "some",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 18,
+      "world_theta": 0.3,
+      "observation": [
+        2,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 19,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        0,
+        3,
+        1,
+        0,
+        1,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 20,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "most",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 21,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        2,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "some",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 22,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        2,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "some",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 23,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "most",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 24,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "most",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 25,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "none",
+        "all",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 26,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "none",
+        "effective"
+      ]
+    },
+    {
+      "round": 27,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        2,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "some",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 28,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "most",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 29,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "none",
+        "effective"
+      ]
+    },
+    {
+      "round": 30,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        3,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "none",
+        "all",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 31,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        1,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 32,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        0,
+        2,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "most",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 33,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        3,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 34,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        0,
+        2,
+        2,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 35,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        0,
+        3,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "some",
+        "effective"
+      ]
+    },
+    {
+      "round": 36,
+      "world_theta": 0.3,
+      "observation": [
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "all",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 37,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        1,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "all",
+        "most",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 38,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        2,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "most",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 39,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        2,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "none",
+        "all",
+        "ineffective"
+      ]
+    },
+    {
+      "round": 40,
+      "world_theta": 0.3,
+      "observation": [
+        0,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "utterance": [
+        "some",
+        "most",
+        "ineffective"
+      ]
+    }
+  ],
+  "agent_histories": {
+    "pragmatic_speaker_2": [
+      "<__main__.Belief object at 0x0000024A739B5990>",
+      "<__main__.Belief object at 0x0000024A739B4690>",
+      "<__main__.Belief object at 0x0000024A78877390>",
+      "<__main__.Belief object at 0x0000024A72421CD0>",
+      "<__main__.Belief object at 0x0000024A72421D90>",
+      "<__main__.Belief object at 0x0000024A72811FD0>",
+      "<__main__.Belief object at 0x0000024A79A84450>",
+      "<__main__.Belief object at 0x0000024A79393910>",
+      "<__main__.Belief object at 0x0000024A731A12D0>",
+      "<__main__.Belief object at 0x0000024A73CA96D0>",
+      "<__main__.Belief object at 0x0000024A73CA9610>",
+      "<__main__.Belief object at 0x0000024A7433D110>",
+      "<__main__.Belief object at 0x0000024A727DA990>",
+      "<__main__.Belief object at 0x0000024A729D6550>",
+      "<__main__.Belief object at 0x0000024A74607050>",
+      "<__main__.Belief object at 0x0000024A74607910>",
+      "<__main__.Belief object at 0x0000024A73491B50>",
+      "<__main__.Belief object at 0x0000024A6EF4F7D0>",
+      "<__main__.Belief object at 0x0000024A742BE3D0>",
+      "<__main__.Belief object at 0x0000024A6E4F1A90>",
+      "<__main__.Belief object at 0x0000024A79E87DD0>",
+      "<__main__.Belief object at 0x0000024A731A0410>",
+      "<__main__.Belief object at 0x0000024A74349550>",
+      "<__main__.Belief object at 0x0000024A732D4FD0>",
+      "<__main__.Belief object at 0x0000024A732D4F10>",
+      "<__main__.Belief object at 0x0000024A6E4F1B90>",
+      "<__main__.Belief object at 0x0000024A7339E3D0>",
+      "<__main__.Belief object at 0x0000024A78F2A610>",
+      "<__main__.Belief object at 0x0000024A73507390>",
+      "<__main__.Belief object at 0x0000024A73D40610>",
+      "<__main__.Belief object at 0x0000024A727D4ED0>",
+      "<__main__.Belief object at 0x0000024A791C81D0>",
+      "<__main__.Belief object at 0x0000024A791C80D0>",
+      "<__main__.Belief object at 0x0000024A79BFFF10>",
+      "<__main__.Belief object at 0x0000024A7254F0D0>",
+      "<__main__.Belief object at 0x0000024A7254F190>",
+      "<__main__.Belief object at 0x0000024A79373C90>",
+      "<__main__.Belief object at 0x0000024A79373690>",
+      "<__main__.Belief object at 0x0000024A78FA9A50>",
+      "<__main__.Belief object at 0x0000024A712DCCD0>",
+      "<__main__.Belief object at 0x0000024A74742050>"
+    ],
+    "pragmatic_listener_1": [
+      "<__main__.Belief object at 0x0000024A739B5A10>",
+      "<__main__.Belief object at 0x0000024A739B5810>",
+      "<__main__.Belief object at 0x0000024A739B56D0>",
+      "<__main__.Belief object at 0x0000024A739B5950>",
+      "<__main__.Belief object at 0x0000024A739B5AD0>",
+      "<__main__.Belief object at 0x0000024A739B5910>",
+      "<__main__.Belief object at 0x0000024A739B58D0>",
+      "<__main__.Belief object at 0x0000024A78F37ED0>",
+      "<__main__.Belief object at 0x0000024A78B900D0>",
+      "<__main__.Belief object at 0x0000024A797C4890>",
+      "<__main__.Belief object at 0x0000024A73A09790>",
+      "<__main__.Belief object at 0x0000024A73100850>",
+      "<__main__.Belief object at 0x0000024A78B69250>",
+      "<__main__.Belief object at 0x0000024A73A09D10>",
+      "<__main__.Belief object at 0x0000024A73102810>",
+      "<__main__.Belief object at 0x0000024A72E52210>",
+      "<__main__.Belief object at 0x0000024A7284B5D0>",
+      "<__main__.Belief object at 0x0000024A7358F3D0>",
+      "<__main__.Belief object at 0x0000024A7358C310>",
+      "<__main__.Belief object at 0x0000024A73638F50>",
+      "<__main__.Belief object at 0x0000024A73272A10>",
+      "<__main__.Belief object at 0x0000024A72C00550>",
+      "<__main__.Belief object at 0x0000024A73D6E1D0>",
+      "<__main__.Belief object at 0x0000024A737CB150>",
+      "<__main__.Belief object at 0x0000024A72848E10>",
+      "<__main__.Belief object at 0x0000024A735A9850>",
+      "<__main__.Belief object at 0x0000024A739E6BD0>",
+      "<__main__.Belief object at 0x0000024A74890190>",
+      "<__main__.Belief object at 0x0000024A78BE1B50>",
+      "<__main__.Belief object at 0x0000024A71290D50>",
+      "<__main__.Belief object at 0x0000024A7898A950>",
+      "<__main__.Belief object at 0x0000024A7299D010>",
+      "<__main__.Belief object at 0x0000024A75535D10>",
+      "<__main__.Belief object at 0x0000024A79E82B10>",
+      "<__main__.Belief object at 0x0000024A73C17090>",
+      "<__main__.Belief object at 0x0000024A72848C90>",
+      "<__main__.Belief object at 0x0000024A78B6BB10>",
+      "<__main__.Belief object at 0x0000024A78B6BD10>",
+      "<__main__.Belief object at 0x0000024A745FF910>",
+      "<__main__.Belief object at 0x0000024A78EA33D0>",
+      "<__main__.Belief object at 0x0000024A78B922D0>"
+    ],
+    "pragmatic_speaker_1": [
+      "<__main__.Belief object at 0x0000024A739B57D0>",
+      "<__main__.Belief object at 0x0000024A739B52D0>",
+      "<__main__.Belief object at 0x0000024A739B5BD0>",
+      "<__main__.Belief object at 0x0000024A739B5790>",
+      "<__main__.Belief object at 0x0000024A73508090>",
+      "<__main__.Belief object at 0x0000024A74797B90>",
+      "<__main__.Belief object at 0x0000024A73D007D0>",
+      "<__main__.Belief object at 0x0000024A72876E50>",
+      "<__main__.Belief object at 0x0000024A7479C050>",
+      "<__main__.Belief object at 0x0000024A73495610>",
+      "<__main__.Belief object at 0x0000024A72E04E90>",
+      "<__main__.Belief object at 0x0000024A73961850>",
+      "<__main__.Belief object at 0x0000024A73961B50>",
+      "<__main__.Belief object at 0x0000024A74707310>",
+      "<__main__.Belief object at 0x0000024A79BFDD50>",
+      "<__main__.Belief object at 0x0000024A72FB4A50>",
+      "<__main__.Belief object at 0x0000024A75283990>",
+      "<__main__.Belief object at 0x0000024A73E1F910>",
+      "<__main__.Belief object at 0x0000024A73E1FB90>",
+      "<__main__.Belief object at 0x0000024A74DBF3D0>",
+      "<__main__.Belief object at 0x0000024A7479AC90>",
+      "<__main__.Belief object at 0x0000024A72C01350>",
+      "<__main__.Belief object at 0x0000024A6C9C3990>",
+      "<__main__.Belief object at 0x0000024A74530790>",
+      "<__main__.Belief object at 0x0000024A74530610>",
+      "<__main__.Belief object at 0x0000024A747697D0>",
+      "<__main__.Belief object at 0x0000024A7B5EFFD0>",
+      "<__main__.Belief object at 0x0000024A73D87AD0>",
+      "<__main__.Belief object at 0x0000024A73D1E8D0>",
+      "<__main__.Belief object at 0x0000024A731A0090>",
+      "<__main__.Belief object at 0x0000024A6C9C1210>",
+      "<__main__.Belief object at 0x0000024A7432E850>",
+      "<__main__.Belief object at 0x0000024A7432EA10>",
+      "<__main__.Belief object at 0x0000024A727D5290>",
+      "<__main__.Belief object at 0x0000024A7AFFFD90>",
+      "<__main__.Belief object at 0x0000024A7AFFEC90>",
+      "<__main__.Belief object at 0x0000024A73AE7510>",
+      "<__main__.Belief object at 0x0000024A73AE76D0>",
+      "<__main__.Belief object at 0x0000024A792918D0>",
+      "<__main__.Belief object at 0x0000024A742A6850>",
+      "<__main__.Belief object at 0x0000024A7122E710>"
+    ],
+    "literal_listener": [
+      "<__main__.Belief object at 0x0000024A792F3FD0>",
+      "<__main__.Belief object at 0x0000024A78E76710>",
+      "<__main__.Belief object at 0x0000024A727D6910>",
+      "<__main__.Belief object at 0x0000024A740BCF50>",
+      "<__main__.Belief object at 0x0000024A72786BD0>",
+      "<__main__.Belief object at 0x0000024A78B48210>",
+      "<__main__.Belief object at 0x0000024A797C9510>",
+      "<__main__.Belief object at 0x0000024A739E72D0>",
+      "<__main__.Belief object at 0x0000024A7365B010>",
+      "<__main__.Belief object at 0x0000024A6E5610D0>",
+      "<__main__.Belief object at 0x0000024A797C9350>",
+      "<__main__.Belief object at 0x0000024A729D6DD0>",
+      "<__main__.Belief object at 0x0000024A729324D0>",
+      "<__main__.Belief object at 0x0000024A71264990>",
+      "<__main__.Belief object at 0x0000024A78C08F50>",
+      "<__main__.Belief object at 0x0000024A73491450>",
+      "<__main__.Belief object at 0x0000024A7354C3D0>",
+      "<__main__.Belief object at 0x0000024A7479B290>",
+      "<__main__.Belief object at 0x0000024A72796F50>",
+      "<__main__.Belief object at 0x0000024A72796D90>",
+      "<__main__.Belief object at 0x0000024A7479A950>",
+      "<__main__.Belief object at 0x0000024A72796F90>",
+      "<__main__.Belief object at 0x0000024A7301C4D0>",
+      "<__main__.Belief object at 0x0000024A6F23C7D0>",
+      "<__main__.Belief object at 0x0000024A73DF8150>",
+      "<__main__.Belief object at 0x0000024A7ABA4490>",
+      "<__main__.Belief object at 0x0000024A7A2FF510>",
+      "<__main__.Belief object at 0x0000024A790EDE50>",
+      "<__main__.Belief object at 0x0000024A73A6CC90>",
+      "<__main__.Belief object at 0x0000024A72D18F90>",
+      "<__main__.Belief object at 0x0000024A7122F990>",
+      "<__main__.Belief object at 0x0000024A735A9410>",
+      "<__main__.Belief object at 0x0000024A73A9DE90>",
+      "<__main__.Belief object at 0x0000024A72C3C350>",
+      "<__main__.Belief object at 0x0000024A73C28D50>",
+      "<__main__.Belief object at 0x0000024A73D9BA10>",
+      "<__main__.Belief object at 0x0000024A6E8EE150>",
+      "<__main__.Belief object at 0x0000024A72ECFD90>",
+      "<__main__.Belief object at 0x0000024A727DFC90>",
+      "<__main__.Belief object at 0x0000024A73E75F50>",
+      "<__main__.Belief object at 0x0000024A7433E550>"
+    ],
+    "literal_speaker": [
+      "<__main__.Belief object at 0x0000024A78B3C0D0>",
+      "<__main__.Belief object at 0x0000024A78E763D0>",
+      "<__main__.Belief object at 0x0000024A727D70D0>",
+      "<__main__.Belief object at 0x0000024A740BFD90>",
+      "<__main__.Belief object at 0x0000024A727867D0>",
+      "<__main__.Belief object at 0x0000024A78B4B110>",
+      "<__main__.Belief object at 0x0000024A797CB9D0>",
+      "<__main__.Belief object at 0x0000024A739E7F90>",
+      "<__main__.Belief object at 0x0000024A74E412D0>",
+      "<__main__.Belief object at 0x0000024A791CB5D0>",
+      "<__main__.Belief object at 0x0000024A797C9710>",
+      "<__main__.Belief object at 0x0000024A729D6E10>",
+      "<__main__.Belief object at 0x0000024A72930C50>",
+      "<__main__.Belief object at 0x0000024A71264C10>",
+      "<__main__.Belief object at 0x0000024A78C081D0>",
+      "<__main__.Belief object at 0x0000024A73491F90>",
+      "<__main__.Belief object at 0x0000024A7354F250>",
+      "<__main__.Belief object at 0x0000024A7479B2D0>",
+      "<__main__.Belief object at 0x0000024A74F90E50>",
+      "<__main__.Belief object at 0x0000024A72795D50>",
+      "<__main__.Belief object at 0x0000024A7479A4D0>",
+      "<__main__.Belief object at 0x0000024A71292E50>",
+      "<__main__.Belief object at 0x0000024A7301C290>",
+      "<__main__.Belief object at 0x0000024A73D5AA90>",
+      "<__main__.Belief object at 0x0000024A73DF98D0>",
+      "<__main__.Belief object at 0x0000024A7ABA42D0>",
+      "<__main__.Belief object at 0x0000024A7A2FEA50>",
+      "<__main__.Belief object at 0x0000024A790EDDD0>",
+      "<__main__.Belief object at 0x0000024A73A6F990>",
+      "<__main__.Belief object at 0x0000024A72D182D0>",
+      "<__main__.Belief object at 0x0000024A7122F050>",
+      "<__main__.Belief object at 0x0000024A735A9490>",
+      "<__main__.Belief object at 0x0000024A742BE550>",
+      "<__main__.Belief object at 0x0000024A72C3C490>",
+      "<__main__.Belief object at 0x0000024A73C2B150>",
+      "<__main__.Belief object at 0x0000024A73D9BB10>",
+      "<__main__.Belief object at 0x0000024A72F4AC90>",
+      "<__main__.Belief object at 0x0000024A6E8ECB90>",
+      "<__main__.Belief object at 0x0000024A727DEB50>",
+      "<__main__.Belief object at 0x0000024A78F2A990>",
+      "<__main__.Belief object at 0x0000024A7433E3D0>"
+    ]
+  }
+}

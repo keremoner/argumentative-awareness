@@ -335,7 +335,21 @@ def make_sus_variant(variant: str):
 
         p_pred = _p_pred(variant, ctx)              # (n_utt,)
         correction = float(np.dot(p_pred, var_O_given_u))
-        var_corrected = float(max(var_naive - correction, 0.0))
+
+        # NOT clipped at zero here.  The law-of-total-variance identity is
+        #     Var_u[s(u)] = E_u[var_naive(u)] - correction
+        # i.e. it holds for the *expectation* over u.  ``correction`` is a
+        # single constant for this listener state, while ``var_naive`` varies
+        # with the realised u, so clipping each term individually would push
+        # low-variance utterances up to 0 and inflate the running mean above
+        # the true variance (up to ~9% at alpha=1, where the clipped
+        # utterances carry most of the probability mass).
+        #
+        # SequentialTest accumulates these and clips the running *average*
+        # (``max(var_sum / t, 0)`` before the sqrt), which is the correct
+        # place to enforce non-negativity.  Individual rounds may therefore
+        # return a negative corrected variance; that is expected.
+        var_corrected = float(var_naive - correction)
 
         return score, max(var_naive, 0.0), var_corrected
 
@@ -343,7 +357,10 @@ def make_sus_variant(variant: str):
     f.__doc__ = (
         f"sus variant {variant}. Returns (score, var_naive, var_corrected); "
         f"var_corrected uses the law-of-total-variance correction that "
-        f"removes the within-posterior variance of B(u', O') over W_v(. | u')."
+        f"removes the within-posterior variance of B(u', O') over W_v(. | u'). "
+        f"var_corrected is unclipped and may be negative for an individual "
+        f"round -- the identity holds in expectation over u, and SequentialTest "
+        f"clips the running average."
     )
     return f
 
