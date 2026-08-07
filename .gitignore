@@ -10,11 +10,15 @@ venv/
 # Jupyter
 .ipynb_checkpoints/
 
-# Raw simulation data (large; regenerate via experiments/*/run_*.py)
-# results/**/trajectories/
-# results/**/simulations/
-# results/**/raw_trajectories.parquet
-# results/**/raw_*.parquet
+# Raw simulation data. Large (~2.4 GB) and fully reproducible: every run is
+# seeded by _seed_for(cell_id, sim_idx, seed_base) and run_config.json records
+# seed_base + git_hash. Regenerate with, e.g.:
+#   python experiments/full_sweep/run_sweep.py          (~33 min for the full grid)
+#   python experiments/group1/run_sims.py
+# Everything else under results/ (run_config.json, sanity.md, summary.md,
+# figures, CSVs) stays tracked so provenance and conclusions travel with the code.
+results/**/*.parquet
+results/**/*.pkl
 
 # Smoke-test outputs (throwaway)
 results/*_smoke/
@@ -22,3 +26,14 @@ results/*_smoke/
 # OS
 .DS_Store
 Thumbs.db
+
+# Typst build output
+build/typst/
+# tinymist/typst-preview exports next to the source
+docs/*.pdf
+
+# LaTeX build artifacts (from the superseded docs/legacy/*.tex sources)
+docs/**/*.aux
+docs/**/*.log
+docs/**/*.out
+docs/**/*.synctex.gz

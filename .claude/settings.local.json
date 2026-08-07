@@ -17,7 +17,8 @@
       "Read(//c/Users/onerk/.claude/projects/d--Research-argumentative-awareness/**)",
       "Read(//c/Users/onerk/.claude/projects/**)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/ -q)",
-      "Bash(.venv/Scripts/python.exe -m pytest tests/test_sus_variants.py -v)"
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_sus_variants.py -v)",
+      "Bash(python -c ' *)"
     ]
   }
 }
