@@ -18,7 +18,9 @@
       "Read(//c/Users/onerk/.claude/projects/**)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/ -q)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/test_sus_variants.py -v)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(python -m pytest tests/ -q)",
+      "Bash(.conda/python.exe -c \"import pytest; print\\(pytest.__version__\\)\")"
     ]
   }
 }
