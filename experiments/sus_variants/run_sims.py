@@ -38,13 +38,11 @@ from rsa.detection import (
 )
 
 
-# score_name -> score_fn. surp2 uses the legacy 2-tuple signature (corrected == naive).
+# score_name -> score_fn. Every score returns (score, var) with a single exact
+# null variance; variants 3/4/4b are retired (see rsa/detection/scores.py).
 SCORE_FNS = {
     "surp2": compute_surp2,
     "sus_1": SUS_VARIANT_FNS["1"],
-    "sus_3": SUS_VARIANT_FNS["3"],
-    "sus_4": SUS_VARIANT_FNS["4"],
-    "sus_4b": SUS_VARIANT_FNS["4b"],
 }
 SCORE_NAMES = list(SCORE_FNS.keys())
 
@@ -111,20 +109,14 @@ def run_single(task):
                 "round": i + 1,
                 "score_type": t.name,
                 "score": float(h["scores"][i]),
-                "variance_naive": float(h["variances"][i]),
-                "variance_corrected": float(h["variances_corrected"][i]),
+                "variance": float(h["variances"][i]),
                 "running_mean": float(h["running_mean"][i]),
-                "running_sigma_naive": float(h["running_sigma"][i]),
-                "running_sigma_corrected": float(h["running_sigma_corrected"][i]),
-                "threshold_naive": float(h["threshold"][i]),
-                "threshold_corrected": float(h["threshold_corrected"][i]),
-                "crossed_naive": bool(h["crossed"][i]),
-                "crossed_corrected": bool(h["crossed_corrected"][i]),
+                "running_sigma": float(h["running_sigma"][i]),
+                "threshold": float(h["threshold"][i]),
+                "crossed": bool(h["crossed"][i]),
             })
-        tau_summary[f"tau_naive_{t.name}"] = (
-            -1 if t.tau_naive is None else int(t.tau_naive))
-        tau_summary[f"tau_corrected_{t.name}"] = (
-            -1 if t.tau_corrected is None else int(t.tau_corrected))
+        tau_summary[f"tau_{t.name}"] = (
+            -1 if t.tau is None else int(t.tau))
     return rows, tau_summary
 
 

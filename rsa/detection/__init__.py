@@ -21,7 +21,16 @@ from .scores import (
     SCORE_FNS,
 )
 from .sequential_test import SequentialTest
-from .listener import DetectionListener
+from .listener import DetectionListener, SWITCH_TYPES
+from .replay import (
+    Trajectory,
+    TableSpeaker,
+    replay_listener,
+    splice,
+    tau_for_rule,
+    regenerate_tables,
+    switching_trajectory,
+)
 
 __all__ = [
     "ScoreContext",
@@ -34,4 +43,12 @@ __all__ = [
     "SCORE_FNS",
     "SequentialTest",
     "DetectionListener",
+    "SWITCH_TYPES",
+    "Trajectory",
+    "TableSpeaker",
+    "replay_listener",
+    "splice",
+    "tau_for_rule",
+    "regenerate_tables",
+    "switching_trajectory",
 ]

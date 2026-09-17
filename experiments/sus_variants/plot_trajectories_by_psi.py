@@ -2,7 +2,7 @@
 
 For each of the 5 scores, one panel showing Sus(t) mean +/- 95% band for
 psi=inf (null, pooled over theta_star), psi=high (theta*=0.5), and
-psi=low (theta*=0.5). Mean naive and corrected thresholds are overlaid
+psi=low (theta*=0.5). The mean null threshold is overlaid
 so the crossing story is visible at a glance.
 """
 
@@ -57,12 +57,9 @@ def plot_grid(traj, out_path, rounds):
 
         # Null-condition thresholds (mean across psi=inf sims, pooled over theta).
         null = traj[(traj["score_type"] == score) & (traj["psi"] == "inf")]
-        thr_n = null.groupby("round")["threshold_naive"].mean().reindex(ts).to_numpy()
-        thr_c = null.groupby("round")["threshold_corrected"].mean().reindex(ts).to_numpy()
+        thr_n = null.groupby("round")["threshold"].mean().reindex(ts).to_numpy()
         ax.plot(ts, thr_n, color="black", lw=1.0, ls="--",
-                label="mean threshold (naive, null)")
-        ax.plot(ts, thr_c, color="gray", lw=1.0, ls=":",
-                label="mean threshold (corrected, null)")
+                label="mean threshold (null)")
 
         ax.axhline(0, color="gray", lw=0.4)
         ax.set_ylabel(f"{score}\nSus(t)")
@@ -119,9 +116,9 @@ def plot_null_by_theta(traj, out_path, rounds):
             ax.plot(ts, mean, color=col, lw=1.6, label=f"theta*={th}")
             ax.fill_between(ts, lo, hi, color=col, alpha=0.12)
         null = traj[(traj["score_type"] == score) & (traj["psi"] == "inf")]
-        thr_n = null.groupby("round")["threshold_naive"].mean().reindex(ts).to_numpy()
+        thr_n = null.groupby("round")["threshold"].mean().reindex(ts).to_numpy()
         ax.plot(ts, thr_n, color="black", lw=0.9, ls="--",
-                label="mean threshold (naive)")
+                label="mean threshold")
         ax.axhline(0, color="gray", lw=0.4)
         ax.set_ylabel(f"{score}\nSus(t)")
         ax.grid(alpha=0.3)

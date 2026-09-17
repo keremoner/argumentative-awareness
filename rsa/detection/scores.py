@@ -36,6 +36,20 @@ def _varentropy(p: np.ndarray) -> float:
     return float(max(E_sq - H ** 2, 0.0))
 
 
+def _exact_score_variance(W: np.ndarray, B: np.ndarray,
+                          p_pred: np.ndarray) -> float:
+    """Var_{u ~ p_pred}[ s(u) ] with s(u) = sum_O W[O,u] B[O,u].
+
+    Uses E_u[s(u)] = 0, which holds for variant 1 under the listener's own
+    joint q(O) k(u|O): summing p(u) s(u) over u collapses to
+    sum_O q(O) (H_O - H_O) = 0.  With |U| = |O| = 8 this is an exact finite
+    sum over the utterance space, so it depends only on the listener state --
+    not on the utterance actually heard -- and is non-negative by construction.
+    """
+    s_all = np.sum(W * B, axis=0)           # (n_utt,)
+    return float(np.dot(p_pred, s_all ** 2))
+
+
 class ScoreContext:
     """Lazy bundle of per-round quantities shared across the three scores.
 
@@ -59,16 +73,15 @@ class ScoreContext:
         self.u_obs = u_obs
         self.u_obs_idx = semantics.utterance_index(u_obs)
 
-        # Listener's theta marginals (normalized; length = n_theta).
-        # ``l0_theta`` is optional so the three core scores (surp2, surp1,
-        # sus) continue to work without it; only the sus-variant scores
-        # that need L_0 will require it.
+        # Listener's theta marginal (normalized; length = n_theta).
+        # ``l0_theta`` is accepted for backward compatibility only (the
+        # retired sus_4/4b variants needed an L_0 belief); it is stored but
+        # nothing in the live score set reads it.
         self.L1_theta = np.asarray(l1_theta, dtype=float)
         self.L0_theta = (np.asarray(l0_theta, dtype=float)
                          if l0_theta is not None else None)
 
         self._L1_O = None
-        self._L0_O = None
         self._S1_table = None
         self._log_S1_table = None
         self._P_prior = None
@@ -153,21 +166,6 @@ class ScoreContext:
         return self._log_P_post
 
     @property
-    def L0_O(self) -> np.ndarray:
-        """L0^(t)(O) = sum_theta P(O | theta) * L0^(t)(theta)."""
-        if self._L0_O is None:
-            if self.L0_theta is None:
-                raise RuntimeError(
-                    "ScoreContext was built without L0_theta; variants that "
-                    "require L_0 cannot be computed."
-                )
-            obs_prob_table = self.world.obs_prob_table(self.thetas)
-            p = obs_prob_table @ self.L0_theta
-            s = p.sum()
-            self._L0_O = p / s if s > 0 else p
-        return self._L0_O
-
-    @property
     def truth_table(self) -> np.ndarray:
         """Truth matrix, shape (n_obs, n_utt), bool."""
         if self._truth_table is None:
@@ -223,6 +221,9 @@ def compute_surp1(ctx: ScoreContext):
 
     Note ``u_obs`` appears twice: once as the scored utterance, once inside
     the conditioning that produced the posterior predictive.
+
+    Not part of the live score set -- collected in raw data but excluded from
+    presented results.
     """
     P_post = ctx.P_post
     log_P = ctx.log_P_post
@@ -232,58 +233,22 @@ def compute_surp1(ctx: ScoreContext):
     return score, max(var, 0.0)
 
 
-def compute_sus(ctx: ScoreContext):
-    """Observation-level suspicion (Eq. 7 of three_scores.pdf).
-
-        sus(u) = sum_O L1(O|u) [ -log S1(u|O,inf) - H(S1(.|O,inf)) ]
-        sigma^2 = sum_O L1(O|u) * Var_{u' ~ S1(.|O,inf)}[-log S1(u'|O,inf)]
-
-    Log is taken inside the marginalization over O.  Under the null
-    (u | O ~ S1(. | O, inf)) the per-O excess surprise has mean zero, so
-    E[sus] = 0.
-    """
-    L1_O_post = ctx.L1_O_given_u
-    S1_table = ctx.S1_table
-    log_S1 = ctx.log_S1_table
-    u_idx = ctx.u_obs_idx
-
-    neg_log_u = -log_S1[:, u_idx]                  # n_obs
-    H_per_O = ctx.H_per_O                          # n_obs
-    per_O_score = neg_log_u - H_per_O              # n_obs
-    score = float(np.dot(L1_O_post, per_O_score))
-
-    E_sq_per_O = np.sum(S1_table * log_S1 ** 2, axis=1)
-    varentropy_per_O = np.maximum(E_sq_per_O - H_per_O ** 2, 0.0)
-    var = float(np.dot(L1_O_post, varentropy_per_O))
-    return score, max(var, 0.0)
-
-
-SCORE_FNS = {
-    "surp2": compute_surp2,
-    "surp1": compute_surp1,
-    "sus": compute_sus,
-}
-
-
 # ---------------------------------------------------------------------------
 # sus variants (see sus_variants_spec for the math)
 # ---------------------------------------------------------------------------
 
-SUS_VARIANTS = ("1", "3", "4", "4b")
+# Variant 1 is the live score.  Variants 3/4/4b are retired: they are dominated
+# empirically and, more importantly, the mean-zero property that the exact
+# variance below relies on does not hold for them, so there is no analogue of
+# ``_exact_score_variance`` to give them.
+SUS_VARIANTS = ("1",)
+RETIRED_SUS_VARIANTS = ("3", "4", "4b")
 
 
 def _weighting_matrix(variant: str, ctx: "ScoreContext") -> np.ndarray:
     """W_v[O, u], columns normalized. Zero columns left as zero."""
-    n_obs, n_utt = ctx.S1_table.shape
     if variant == "1":
         num = ctx.S1_table * ctx.L1_O[:, None]
-    elif variant == "3":
-        num = ctx.truth_table.astype(float) * ctx.L1_O[:, None]
-    elif variant == "4":
-        num = ctx.truth_table.astype(float) * ctx.L0_O[:, None]
-    elif variant == "4b":
-        inv_T = np.where(ctx.T_O > 0, 1.0 / np.maximum(ctx.T_O, 1.0), 0.0)
-        num = ctx.truth_table.astype(float) * ctx.L0_O[:, None] * inv_T[:, None]
     else:
         raise ValueError(f"unknown sus variant {variant!r}")
     col_sums = num.sum(axis=0, keepdims=True)
@@ -294,27 +259,47 @@ def _weighting_matrix(variant: str, ctx: "ScoreContext") -> np.ndarray:
 
 def _p_pred(variant: str, ctx: "ScoreContext") -> np.ndarray:
     """P_pred_v(u') over the utterance space, shape (n_utt,)."""
-    if variant in ("1", "3"):
-        # sum_O S1(u'|O,inf) * L1(O)
+    if variant == "1":
+        # sum_O S1(u'|O,inf) * L1(O)  ==  ctx.P_prior
         p = ctx.S1_table.T @ ctx.L1_O
-    elif variant == "4":
-        # sum_O S1(u'|O,inf) * L0(O)
-        p = ctx.S1_table.T @ ctx.L0_O
-    elif variant == "4b":
-        # sum_O S1(u'|O,inf) * L0(O)/T(O), renormalized
-        inv_T = np.where(ctx.T_O > 0, 1.0 / np.maximum(ctx.T_O, 1.0), 0.0)
-        weighted = ctx.L0_O * inv_T
-        p = ctx.S1_table.T @ weighted
     else:
         raise ValueError(f"unknown sus variant {variant!r}")
     s = p.sum()
     return p / s if s > 0 else p
 
 
-def make_sus_variant(variant: str):
-    """Return a score function ``f(ctx) -> (score, var_naive, var_corrected)``
-    for sus variant ``v in {"1","3","4","4b"}``.
+def _within_posterior_correction(W: np.ndarray, B: np.ndarray,
+                                 p_pred: np.ndarray) -> float:
+    """K = sum_u p(u) Var_{O ~ W(.|u)}[B(O, u)].
+
+    Not used on the score path -- the exact variance needs no correction term.
+    Retained because the law-of-total-variance identity
+
+        Var_u[s(u)] = sum_O q(O) v_O  -  K
+
+    is an independent second form of the same number, checked against the
+    direct form in the test suite.
     """
+    mean_B = np.sum(W * B, axis=0)
+    E_B_sq = np.sum(W * B ** 2, axis=0)
+    var_O_given_u = np.maximum(E_B_sq - mean_B ** 2, 0.0)
+    return float(np.dot(p_pred, var_O_given_u))
+
+
+def make_sus_variant(variant: str):
+    """Return a score function ``f(ctx) -> (score, var)`` for sus variant ``v``.
+
+    ``var`` is the exact variance of the score under the listener's own
+    predictive distribution -- a finite sum over the |U| utterances that depends
+    only on the listener state, not on the utterance actually heard.  It is
+    non-negative by construction.
+    """
+    if variant in RETIRED_SUS_VARIANTS:
+        raise NotImplementedError(
+            f"sus variant {variant!r} is retired: it is empirically dominated "
+            f"and its score is not mean-zero under the listener's joint, so the "
+            f"exact state-only variance does not apply. See docs/project.typ."
+        )
     if variant not in SUS_VARIANTS:
         raise ValueError(f"unknown sus variant {variant!r}")
 
@@ -322,47 +307,31 @@ def make_sus_variant(variant: str):
         u_idx = ctx.u_obs_idx
         W = _weighting_matrix(variant, ctx)        # (n_obs, n_utt)
         B = ctx.B_matrix                            # (n_obs, n_utt)
-        varent = ctx.varentropy_per_O               # (n_obs,)
-        w_u = W[:, u_idx]                           # (n_obs,)
-
-        score = float(np.dot(w_u, B[:, u_idx]))
-        var_naive = float(np.dot(w_u, varent))
-
-        # Corrected variance: naive - within-posterior correction.
-        mean_B = np.sum(W * B, axis=0)              # (n_utt,)
-        E_B_sq = np.sum(W * B ** 2, axis=0)         # (n_utt,)
-        var_O_given_u = np.maximum(E_B_sq - mean_B ** 2, 0.0)  # (n_utt,)
-
         p_pred = _p_pred(variant, ctx)              # (n_utt,)
-        correction = float(np.dot(p_pred, var_O_given_u))
 
-        # NOT clipped at zero here.  The law-of-total-variance identity is
-        #     Var_u[s(u)] = E_u[var_naive(u)] - correction
-        # i.e. it holds for the *expectation* over u.  ``correction`` is a
-        # single constant for this listener state, while ``var_naive`` varies
-        # with the realised u, so clipping each term individually would push
-        # low-variance utterances up to 0 and inflate the running mean above
-        # the true variance (up to ~9% at alpha=1, where the clipped
-        # utterances carry most of the probability mass).
-        #
-        # SequentialTest accumulates these and clips the running *average*
-        # (``max(var_sum / t, 0)`` before the sqrt), which is the correct
-        # place to enforce non-negativity.  Individual rounds may therefore
-        # return a negative corrected variance; that is expected.
-        var_corrected = float(var_naive - correction)
-
-        return score, max(var_naive, 0.0), var_corrected
+        s_all = np.sum(W * B, axis=0)               # (n_utt,)  s(u) for every u
+        score = float(s_all[u_idx])
+        var = _exact_score_variance(W, B, p_pred)
+        return score, var
 
     f.__name__ = f"compute_sus_{variant}"
     f.__doc__ = (
-        f"sus variant {variant}. Returns (score, var_naive, var_corrected); "
-        f"var_corrected uses the law-of-total-variance correction that "
-        f"removes the within-posterior variance of B(u', O') over W_v(. | u'). "
-        f"var_corrected is unclipped and may be negative for an individual "
-        f"round -- the identity holds in expectation over u, and SequentialTest "
-        f"clips the running average."
+        f"sus variant {variant}. Returns (score, var), where var is the exact "
+        f"Var_{{u ~ P_pred}}[s(u)] for the current listener state -- a finite "
+        f"sum over the utterance space, independent of the utterance heard and "
+        f"non-negative by construction."
     )
     return f
 
 
 SUS_VARIANT_FNS = {v: make_sus_variant(v) for v in SUS_VARIANTS}
+
+# The legacy name is the same score with the same exact variance -- one
+# implementation, so the two cannot drift apart.
+compute_sus = SUS_VARIANT_FNS["1"]
+
+SCORE_FNS = {
+    "surp2": compute_surp2,
+    "surp1": compute_surp1,
+    "sus": compute_sus,
+}

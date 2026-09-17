@@ -33,6 +33,7 @@ alpha
 
 ## Dataset shape
 
-- trajectories: 8,910,000 rows, 45 columns
-- simulations: 59,400 rows
-- unique cells: 297
+- trajectories: 8,910,000 rows across 297 cell shards
+- shards on disk: 297 / 297
+- trajectory rows on disk: 8,910,000
+- integrity: OK

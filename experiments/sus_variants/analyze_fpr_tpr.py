@@ -35,7 +35,7 @@ def compute_rates(traj: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for kind in VARIANCE_KINDS:
         for w in WARMUPS:
-            cr = per_sim_crossed(traj, kind, w)
+            cr = per_sim_crossed(traj, w)
             rates = (cr.groupby(["psi", "theta_star", "score_type"],
                                 observed=True)["ever"].mean()
                      .reset_index(name="rate"))
@@ -51,6 +51,7 @@ def plot_fpr_per_theta(rates: pd.DataFrame, out_path: str):
     fig, axes = plt.subplots(1, len(VARIANCE_KINDS),
                              figsize=(6.0 * len(VARIANCE_KINDS), 4.0),
                              sharey=True)
+    axes = np.atleast_1d(axes)
     for ax, kind in zip(axes, VARIANCE_KINDS):
         sub = fpr[fpr["variance_kind"] == kind]
         for score in ALL_SCORES:
@@ -66,7 +67,7 @@ def plot_fpr_per_theta(rates: pd.DataFrame, out_path: str):
         ax.grid(alpha=0.3)
     axes[0].set_ylabel("FPR (cross within 150 rounds)")
     axes[0].legend(fontsize=8, loc="upper right")
-    fig.suptitle("Null FPR by theta_star x variance kind")
+    fig.suptitle("Null FPR by theta_star")
     fig.tight_layout()
     fig.savefig(out_path, dpi=140)
     plt.close(fig)
@@ -122,7 +123,7 @@ def plot_fpr_tpr_bars(rates: pd.DataFrame, out_path: str):
                 ax.set_ylabel("rate")
         axes[ri][0].axhline(0.05, color="red", lw=0.6, ls=":")
     axes[0][0].legend(fontsize=7, loc="upper right", ncol=2)
-    fig.suptitle("Per-variant FPR vs TPR (across warm-ups and variance kinds)")
+    fig.suptitle("FPR vs TPR across warm-ups")
     fig.tight_layout()
     fig.savefig(out_path, dpi=140)
     plt.close(fig)
@@ -146,6 +147,7 @@ def plot_fpr_tpr_scatter(rates: pd.DataFrame, out_path: str):
     fig, axes = plt.subplots(1, len(VARIANCE_KINDS),
                              figsize=(5.5 * len(VARIANCE_KINDS), 4.2),
                              sharey=True)
+    axes = np.atleast_1d(axes)
     for ax, kind in zip(axes, VARIANCE_KINDS):
         sub = merged[merged["variance_kind"] == kind]
         for score in ALL_SCORES:
@@ -169,7 +171,7 @@ def plot_fpr_tpr_scatter(rates: pd.DataFrame, out_path: str):
         ax.grid(alpha=0.3)
         ax.set_xlim(0, None)
         ax.set_ylim(0, 1.02)
-    fig.suptitle("FPR vs TPR trade-off across variants")
+    fig.suptitle("FPR vs TPR trade-off")
     fig.tight_layout()
     fig.savefig(out_path, dpi=140)
     plt.close(fig)

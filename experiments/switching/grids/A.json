@@ -1,0 +1,18 @@
+{
+  "study": "A",
+  "mode": "offline",
+  "speaker_level": "S1",
+  "listener_level": "L1",
+  "out_dir": "results/switching_A",
+  "theta_stars": [0.1, 0.3, 0.5, 0.7, 0.9],
+  "psi_stars": ["inf", "high", "low"],
+  "alphas": [1.5, 3.0, 5.0, 10.0],
+  "cs": [2.0, 3.5],
+  "switch_types": ["hard", "soft", "hard_amnesic"],
+  "n_sims": 100,
+  "rounds": 150,
+  "n": 1,
+  "m": 7,
+  "seed_base": 0,
+  "workers": 7
+}

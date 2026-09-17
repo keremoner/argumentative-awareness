@@ -1,5 +1,13 @@
 # Group 1 diagnostics — summary
 
+> **Re-run 2026-09-09 against the exact sus_1 null variance.** The numbers below
+> were regenerated after `rsa/detection/scores.py` moved from the per-round proxy
+> `var_naive(u_obs) - K` to the exact state-only `V = sum_u p(u) s(u)^2`. The
+> `sus` figures changed: FPR at `c=2` is now 18.3% (was 12.6%) and the 1.3
+> per-round calibration ratio is 1.00 (was 0.89). `surp2` is unaffected. The
+> conclusion — multiple testing across the horizon, not a variance bug — is
+> unchanged. See `results/full_sweep/variance_fix_diff.md`.
+
 Config: `n=1, m=7, alpha=3, c=2`, 200 sims × 150 rounds per condition,
 switching disabled. Null sweep: `psi=inf, theta_star in {0.1,0.3,0.5,0.7,0.9}`.
 Alt sweep (1.2 TPR): `psi in {high,low}, theta_star=0.5`.
@@ -18,10 +26,10 @@ Per-theta FPR (fraction crossing within 150 rounds) at `psi=inf`:
 | 0.5        | 0.085 | 0.165 |
 | 0.7        | 0.235 | 0.115 |
 | 0.9        | 0.330 | 0.130 |
-| **mean**   | 0.231 | 0.126 |
+| **mean**   | 0.228 | 0.183 |
 
 - Both scores sit well above the nominal ~2.3% expected from a one-sided
-  `c=2` z-threshold. This reproduces the 17-25% FPR problem.
+  `c=2` z-threshold. This reproduces the 18-23% FPR problem.
 - `tau` distribution (see `exp_1.1/figures/hist_tau.png`,
   `violin_tau.png`): crossings are **not** concentrated only at small `t`.
   Roughly 30-55% of crossings for `surp2` happen at `tau <= 10`, but there

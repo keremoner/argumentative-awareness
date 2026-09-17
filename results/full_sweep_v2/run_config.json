@@ -1,0 +1,68 @@
+{
+  "status": "complete",
+  "grid": {
+    "theta_stars": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "psi_trues": [
+      "inf",
+      "pers+",
+      "pers-"
+    ],
+    "alphas": [
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      4.0,
+      5.0,
+      7.0,
+      10.0,
+      15.0,
+      20.0
+    ],
+    "n": 1,
+    "m": 7,
+    "speaker_level": "S1",
+    "rounds": 150,
+    "n_sims_per_cell": 200,
+    "n_cells": 297
+  },
+  "seed_base": 0,
+  "theta_space": [
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1.0
+  ],
+  "psi_label_map": {
+    "inf": "inf",
+    "pers+": "high",
+    "pers-": "low"
+  },
+  "git_hash": "6cf7339a98a90abecf08d7fc308c66407ec5a74d",
+  "wall_seconds": 504.43581914901733,
+  "total_trajectory_rows": 8910000,
+  "run_date_utc": "2026-09-09T15:06:03Z",
+  "failed_cells": [],
+  "stopped_early": null,
+  "derived_from": "D:\\Research\\argumentative-awareness\\results\\full_sweep",
+  "derivation": "sus_1 null variance recomputed offline from the stored per-round L1_theta/L0_theta; scores carried over unchanged from the source sweep. No re-simulation.",
+  "max_score_reconstruction_error": 1.7763568394002505e-14
+}

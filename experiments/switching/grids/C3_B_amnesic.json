@@ -1,0 +1,35 @@
+{
+  "study": "C3",
+  "mode": "feedback",
+  "speaker_level": "S2_replica",
+  "listener_level": "L1",
+  "out_dir": "results/switching_C3",
+  "theta_stars": [
+    0.1,
+    0.3,
+    0.5,
+    0.7,
+    0.9
+  ],
+  "psi_stars": [
+    "inf",
+    "high",
+    "low"
+  ],
+  "alphas": [
+    3.0
+  ],
+  "cs": [
+    2.0,
+    3.5
+  ],
+  "switch_types": [
+    "hard_amnesic"
+  ],
+  "n_sims": 60,
+  "rounds": 150,
+  "n": 1,
+  "m": 7,
+  "seed_base": 1000,
+  "workers": 7
+}

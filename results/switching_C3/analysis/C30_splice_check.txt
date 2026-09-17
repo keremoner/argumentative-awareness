@@ -1,0 +1,1 @@
+Retrospective switch identity: NOT CHECKED. This study ran no switch_type="hard" condition (it ran ['hard_amnesic']), so there is no retrospective trajectory to compare against the always-vigilant one.

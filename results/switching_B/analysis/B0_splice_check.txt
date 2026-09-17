@@ -1,0 +1,5 @@
+Retrospective switch identity, checked on the stored trajectories
+(10800 (sim, c, switch_type) runs, 8909 of which switched):
+  max |E_switch - E_cred| over rounds t <  tau : 0.000e+00
+  max |E_switch - E_vig|  over rounds t >= tau : 0.000e+00
+E[theta] columns are stored as float32; 0.0 is bit-identical agreement.

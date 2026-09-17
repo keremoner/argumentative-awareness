@@ -39,5 +39,5 @@
   "n": 1,
   "m": 7,
   "out_dir": "results/group1",
-  "workers": 0
+  "workers": 6
 }

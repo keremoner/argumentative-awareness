@@ -1,0 +1,76 @@
+{
+  "status": "running",
+  "workers": 7,
+  "grid": {
+    "theta_stars": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "psi_trues": [
+      "inf",
+      "pers+",
+      "pers-"
+    ],
+    "alphas": [
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      4.0,
+      5.0,
+      7.0,
+      10.0,
+      15.0,
+      20.0
+    ],
+    "n": 1,
+    "m": 7,
+    "rounds": 150,
+    "n_sims_per_cell": 200,
+    "n_cells": 297
+  },
+  "policies": [
+    "cred",
+    "vig",
+    "soft",
+    "hard"
+  ],
+  "switch": {
+    "score": "sus_1",
+    "c": 3.5,
+    "types": [
+      "soft",
+      "hard"
+    ]
+  },
+  "seed_base": 0,
+  "theta_space": [
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1.0
+  ],
+  "psi_label_map": {
+    "inf": "inf",
+    "pers+": "high",
+    "pers-": "low"
+  },
+  "git_hash": "6cf7339a98a90abecf08d7fc308c66407ec5a74d",
+  "wall_seconds": 0.0,
+  "run_date_utc": "2026-09-11T03:09:41Z"
+}

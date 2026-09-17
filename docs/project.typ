@@ -48,10 +48,12 @@ Only then would it pay for the expensive vigilant machinery.
 Two questions organize the work: which per-round *score* best separates an
 informative speaker from a persuasive one, and does the sequential test built on
 that score actually control its false-alarm rate. The short answers, developed in
-@experiments, are `sus_1` with a law-of-total-variance–corrected variance, and
-*no* — false alarms run at roughly 21–25% against a nominal 2.3%, for reasons
-that turn out to lie in the shape of the stopping boundary rather than in the
-score or its variance.
+@experiments, are `sus_1` with its exact state-only null variance, and
+*no* — at the nominal $c = 2$ false alarms run at roughly 22% against a nominal
+2.3%, for reasons that lie in the shape of the stopping boundary rather than in
+the score or its variance. The inflation is at least tunable: raising the cutoff
+to $c = 3.5$ brings it to 3.1% while `sus_1` still detects 95% of persuasive
+speakers.
 
 = World and communication setup <setup>
 
@@ -191,7 +193,15 @@ $"PersStr"_(S_2)$ is defined against $L_1$'s posterior mean. Past level 2 the
 recursion is structurally fixed: every $S_n$ for $n >= 2$ reuses the $S_2$
 machinery with index $n-1$ on its internal listener, and every $L_n$ for
 $n >= 1$ reuses the $L_1$ machinery with index $n$ on its internal speaker.
-`rsa/speaker2.py` implements this; the detection experiments stay at $S_1$.
+`rsa/speaker2.py` implements this as the $S_1$ template with the internal
+listener swapped, and nothing else: informativeness is the observation-level
+$P_(L_1)(O | u)$, persuasiveness is $L_1$'s posterior mean, and the speaker's
+own belief over $theta$ is carried but kept out of the policy. (Earlier versions
+deviated on all three counts — a state-level cross-entropy informativeness that
+read $S_2$'s private belief, a mean-centred and truncated persuasiveness, and an
+$exp(alpha log_2 dot)$ softmax. Those are gone; see the switching report.) The
+core detection studies stay at $S_1$; the switching studies of @switching use
+$S_2$.
 
 = The detection problem <detection>
 
@@ -280,48 +290,48 @@ marginalization is what lets the score notice that an utterance is unlikely
 *given the observations that would make it worth saying* — the signature of
 strategic vagueness — rather than merely globally unlikely.
 
-== Variance of `sus` and the total-variance correction <ltv>
+== Null variance of `sus` <ltv>
 
-The natural variance estimate weights the per-$O$ varentropy by the same
-posterior:
+The sequential test needs the variance of the score under the listener's own
+predictive distribution. With $|cal(U)| = |cal(O)| = 8$ this is an exact finite
+sum and is computed directly:
 
-$ sigma_"naive"^(2,(t)) = sum_O q_t (O | u^((t)))
-  op("Var")_(u ~ k_t (dot | O))[-log k_t (u | O)]. $
+$ V_t = sum_(u) p_t (u) med s_"sus" (u)^2, quad
+  s_"sus"(u) = sum_O q_t (O | u) med b_t (O, u). $
 
-This *overstates* the variance. Since $O$ is never observed, the law of total
-variance splits the true variance into a within-$O$ part and a between-$O$ part,
-and only the within-$O$ part is genuine noise in the score; the between-$O$
-spread of the conditional mean is already integrated out by the posterior
-average. The corrected variance subtracts it:
+The square needs no centring because the score is mean-zero under the listener's
+own joint $pi(O, u) = q_t (O) k_t (u | O)$: summing $p_t (u) s_"sus"(u)$ over $u$
+collapses to $sum_O q_t (O) (H_O - H_O) = 0$, by definition of the entropy $H_O$.
 
-$ sigma_"corr"^(2,(t)) = sigma_"naive"^(2,(t)) - K_t, quad
+Two properties matter. $V_t$ depends only on the listener state, not on the
+utterance actually heard — it is the same number whichever $u$ arrives — and it
+is a probability-weighted sum of squares, so it is non-negative by construction.
+Nothing is clipped anywhere.
+
+The law of total variance gives the same quantity a second form,
+
+$ V_t = sum_O q_t (O) med v_t (O) - K_t, quad
   K_t = sum_(u') p_t (u') op("Var")_(O ~ q_t (dot | u'))[b_t (O, u')], $
 
-clipped at zero. This is an *exact identity*, not an approximation: writing
-$pi(O, u) = q_t (O) k_t (u | O)$ for the null joint, $EE[b_t | O] = 0$ by definition of
-entropy, so $op("Var")_pi [b_t] = EE_u [sigma_"naive"^2 (u)]$, and the law of total
-variance gives
-
-$ op("Var")_(u ~ p_t)[s_"sus"(u)] = EE_u [sigma_"naive"^(2)(u)] - K_t. $
-
-This was verified numerically to machine precision at 120 frozen listener states
-(`notebooks/variance_diagnostics.ipynb`). Empirically the correction is the difference
-between a per-round variance ratio of $0.88$ and $0.99$.
+with $v_t (O)$ the varentropy of row $O$. The two forms are checked against each
+other to machine precision at twelve frozen listener states in
+`tests/test_sus_variants.py`, together with a Monte-Carlo check that sampling
+$u ~ p_t$ reproduces $V_t$.
 
 #block(fill: luma(245), inset: 8pt, radius: 3pt, width: 100%)[
-  *Implementation note (fixed 2026-08-07).* The identity holds for
-  $EE_u [sigma_"corr"^2 (u)]$, so the clip must not be applied term by term. An earlier
-  version of `scores.py` used $max(sigma_"naive"^2 (u) - K_t, 0)$ *per utterance*, while
-  $K_t$ is a single constant for the state; every utterance with
-  $sigma_"naive"^2 (u) < K_t$ was clipped upward, adding the clipped mass back and
-  inflating the effective $sigma^2$ by up to 9% at $alpha = 1$, $theta^* = 0.1$ (where
-  those utterances carry ~60% of the probability mass).
+  *Implementation note.* Earlier versions returned the per-round proxy
+  $sigma_"naive"^2 (u^((t))) - K_t$, using the *posterior*-weighted varentropy
+  $sum_O q_t (O | u^((t))) v_t (O)$ in place of the first term of the LTV form.
+  Its expectation over $u$ is $V_t$, so pooled calibration looked correct — the
+  per-round ratio sat at $0.99$ — but round by round it is a different number,
+  and one that moves with the score it is meant to scale.
 
-  `make_sus_variant` now returns the *unclipped* difference — an individual round may be
-  negative — and `SequentialTest` clips the running average
-  $max(sum_i sigma_"corr"^(2,(i)) \/ t, 0)$ before the square root, which is the correct
-  place to enforce non-negativity. Note that `results/full_sweep/` predates the fix and
-  still carries the inflated values at $alpha <= 2$.
+  On the old null trajectories that proxy correlates with its own numerator at
+  $rho = -0.27$ at $alpha = 1.5$, and comes out non-positive on 35% of rounds.
+  A threshold that shrinks precisely when the score spikes manufactures
+  crossings, which is what the false-alarm rate at low $alpha$ was recording.
+  Replacing it with the exact $V_t$ removes the $alpha <= 2$ blow-up entirely.
+  See `results/full_sweep/variance_fix_diff.md` for the before/after tables.
 ]
 
 == Variant family and why only variant 1 survives
@@ -341,16 +351,14 @@ $s_"sus_v" = sum_O W_v (O | u) b_t (O, u)$. Four were implemented:
   [`sus_4b`], [$"Truth"(u; O) med L_0^((t))(O) \/ T(O)$, with $T(O) = |{u : "Truth"(u;O)}|$], [dropped],
 )
 
-Only variant 1 is theoretically sound. The correction in @ltv is a
-law-of-total-variance identity, and it holds only when the implied joint
-$p_"pred,v" (u) dot W_v (O | u)$ equals the true null joint $q_t (O) k_t (u | O)$.
-That is an identity for $W_1$, which _is_ the real posterior. For variants 3, 4,
-and 4b the weighting is an ad-hoc reweighting with the $k_t (u | O)$ factor
-stripped out, so the joint is fictitious and the identity fails. In practice
-their naive variance understates the truth by $1.6$–$1.7 times$ per round (giving
-95–97% false-alarm rates), while their "corrected" variance overshoots and clamps
-to zero (giving no detections at all). They are dominated by `sus_1` on every
-axis and add no detection power; all three are retired.
+Only variant 1 is theoretically sound. The exact variance of @ltv rests on the
+score being mean-zero under the true null joint $q_t (O) k_t (u | O)$, which
+requires the implied joint $p_"pred,v" (u) dot W_v (O | u)$ to equal it. That is
+an identity for $W_1$, which _is_ the real posterior. For variants 3, 4 and 4b
+the weighting is an ad-hoc reweighting with the $k_t (u | O)$ factor stripped
+out, so the joint is fictitious, the score is not mean-zero, and no analogue of
+$V_t$ exists. They were also dominated by `sus_1` on every empirical axis. All
+three are retired: `make_sus_variant` raises `NotImplementedError` for them.
 
 #block(fill: luma(247), inset: 8pt, radius: 3pt)[
   *On `surp1`.* A third core score, the posterior-predictive surprisal
@@ -381,17 +389,41 @@ The first crossing time is $tau$. Setting $c = +infinity$ disables crossing and
 makes the test a pure observer, which is how the full sweep is run so that
 downstream analyses can recompute error rates for any $c$ without re-simulating.
 
-Because `sus_1` reports two variances, the test tracks *both in parallel* —
-two running sigmas, two thresholds, two crossing times ($tau_"naive"$ and
-$tau_"corrected"$) — from a single pass. A score function may return either
-$(s, sigma^2)$ or $(s, sigma_"naive"^2, sigma_"corr"^2)$.
+A score function returns $(s, sigma^2)$. Because $sigma^2$ is exact and
+non-negative by construction, the test accumulates it directly: there is one
+running sigma, one threshold and one crossing time $tau$, and no clipping
+anywhere. A negative variance would be a bug in the score function and is
+raised rather than absorbed.
 
 The test is a passive observer by default. `DetectionListener` can optionally let
-a crossing drive a switch from the credulous listener to a full vigilant $L_1$,
-either *hard* (vigilant starts from a uniform prior) or *soft* (vigilant inherits
-the credulous $theta$-marginal, spread uniformly over $psi$). Switching is
-disabled in all reported experiments — the studies below characterize the
-detector itself before wiring it to a consequence.
+a crossing drive a switch from the credulous listener to a full vigilant $L_1$, in
+one of three ways:
+
+#table(
+  columns: (auto, 1fr),
+  align: (left, left),
+  stroke: (x, y) => if y == 0 { (bottom: 0.7pt) } else { (bottom: 0.3pt + luma(200)) },
+  table.header([*`switch_type`*], [*Belief the vigilant $L_1$ starts from at $tau$*]),
+  [`"hard"`], [*Retrospective.* Uniform prior over $(theta, psi)$, updated on the whole history $u_1, dots.c, u_tau$ inclusive of the triggering utterance, then live from $tau + 1$. The result is identical to an always-vigilant $L_1$ on the same stream.],
+  [`"soft"`], [Inherits the credulous $theta$-marginal (which has already absorbed $u_tau$ credulously), spread uniformly over $psi$, then applies $u_tau$ vigilantly. Keeps the pre-$tau$ credulous belief and is direction-blind at $tau$.],
+  [`"hard_amnesic"`], [Uniform prior, no history: never sees $u_tau$ and starts learning at $tau + 1$. A contrast condition only.],
+)
+
+The retrospective replay cannot call the shared speaker, whose internal $L_0$ has
+moved on: at historical round $i$ it needs the tables
+$P_(S_1)^((i))(u | O, psi)$ as they were at round $i$. `DetectionListener.update`
+therefore snapshots the three $8 times 8$ tables every round into
+`table_history`, and `Listener1.update_with_tables` updates from an explicit
+table triple instead of consulting the speaker. The same primitive makes any
+listener replayable offline on a stored utterance stream
+(`rsa/detection/replay.py`).
+
+`DetectionListener.peek(u)` returns the $theta$-marginal the listener *would*
+hold after hearing $u$ — detector update and switch included — without mutating
+anything. This is what lets an $S_2$ put the consequence of tripping the
+detector inside its own utility. Switching is disabled in the four studies of
+@experiments, which characterize the detector alone; the studies of @switching
+wire it to a consequence.
 
 == What the null should look like
 
@@ -414,16 +446,22 @@ Four studies live in `experiments/`, each writing to a matching directory under
 null sweep over $theta^star in {0.1, 0.3, 0.5, 0.7, 0.9}$.
 
 A one-sided $c = 2$ boundary should give roughly 2.3% false alarms. Observed
-false-positive rates were 23.1% (`surp2`) and 12.6% (`sus`). Four sub-experiments
+false-positive rates are 22.8% (`surp2`) and 18.3% (`sus`). Four sub-experiments
 localized the cause:
 
 - *1.1* — crossings are spread across all $t$, not bunched in an early transient.
-- *1.2* — a warm-up gate barely helps: $t_"warmup" = 10$ only moves FPR to
-  18.1% and 9.3%, at no TPR cost. Cheap insurance, not a fix.
-- *1.3* — the per-round variance formula is well calibrated (`surp2` ratio
-  $1.00$, `sus` $0.89$).
+- *1.2* — a warm-up gate helps but does not fix: $t_"warmup" = 10$ moves FPR to
+  17.3% and 14.0%, at no TPR cost.
+- *1.3* — the per-round variance is well calibrated (`surp2` ratio $0.99$,
+  `sus` $1.00$).
 - *1.4* — the $1\/t$ shrinkage of $op("Var")["Sus"^((t))]$ holds to within about
-  10%, so the CLT scaling is intact.
+  4%, so the CLT scaling is intact.
+
+(These are the re-run figures using the exact variance of @ltv. The study
+originally reported 12.6% for `sus` at $c = 2$ and a per-round ratio of $0.89$;
+both came from the retired posterior-weighted variance, which overstated
+$sigma^2$ and so under-fired. The conclusion below is unchanged, and 1.3 is now
+a cleaner result than it was.)
 
 *Conclusion:* the inflation is neither a miscomputed $sigma^(2,(t))$ nor a broken
 CLT. It is *multiple-testing inflation* — a fixed pointwise $c$ is compared
@@ -432,16 +470,14 @@ fixed-$z$ boundary grows with the horizon.
 
 == sus variants — which weighting to keep
 
-`experiments/sus_variants/` · same configuration, five scores attached as passive
-observers, both variance formulas logged per score.
+`experiments/sus_variants/` · same configuration, with `surp2` and `sus_1`
+attached as passive observers.
 
-This study produced the verdict in @scores: `sus_1` + corrected variance is the
-only calibration-consistent combination (per-round ratio $0.88 -> 0.99$,
-running-mean $0.84 -> 0.97$), while variants 3/4/4b are dominated and
-theoretically unsound. Notably the correction moves `sus_1`'s FPR the *wrong*
-way, 14.2% $->$ 21.1%, because the naive formula had been accidentally
-conservative. The correction is a free honesty fix for the per-round test; it is
-not an FPR fix.
+This study produced the verdict in @scores: `sus_1` is the only
+calibration-consistent variant, while 3/4/4b are dominated and theoretically
+unsound. Re-run against the exact variance of @ltv, its per-round calibration
+ratio is $1.000$ for `sus_1` and $0.994$ for `surp2`, and the running-mean ratios
+are $1.010$ and $1.008$ — so both scores are honest at both levels.
 
 == Full sweep — the main dataset
 
@@ -467,20 +503,40 @@ characteristics:
   [`surp2`], [2.0], [0.234], [0.743], [0.740], [0.508],
   [`surp2`], [3.0], [0.069], [0.667], [0.669], [0.598],
   [`surp2`], [3.5], [0.034], [0.635], [0.636], [0.601],
-  [`sus_1`], [2.0], [0.251], [0.997], [0.996], [0.746],
-  [`sus_1`], [3.0], [0.065], [0.980], [0.978], [0.914],
-  [`sus_1`], [3.5], [0.035], [0.962], [0.960], [0.926],
+  [`surp2`], [5.0], [0.005], [0.556], [0.559], [0.553],
+  [`sus_1`], [2.0], [0.219], [0.996], [0.995], [0.777],
+  [`sus_1`], [3.0], [0.065], [0.974], [0.970], [0.907],
+  [`sus_1`], [3.5], [0.031], [0.947], [0.947], [0.916],
+  [`sus_1`], [5.0], [0.011], [0.830], [0.826], [0.817],
+  [`sus_1`], [7.0], [0.003], [0.681], [0.683], [0.679],
 )
 
-`sus_1` dominates `surp2` everywhere: at matched FPR it detects persuasion
-roughly 30 percentage points more often, and at $c = 3.5$ it holds 96% TPR
-against a 3.5% false-alarm rate. The observation-level score's advantage is
-exactly the structural sensitivity noted in @scores — taking the log inside the
-$O$-marginalization.
+Rates are pooled over $theta^star$ and over $alpha >= 1.5$; the $alpha = 1$ cells
+are simulated and stored but excluded here, since at $alpha = 1$ the pragmatic
+speaker is nearly literal and there is almost no persuasion to detect.
 
-Raising $c$ from 2.0 to 3.5 is also the pragmatic answer to Group 1's finding:
-it is an empirically calibrated horizon-level correction, trading a little power
-for honest error control.
+`sus_1` dominates `surp2` throughout. At $c = 3.5$ it holds 94.7% power against a
+3.1% false-alarm rate, where `surp2` at the same cutoff manages 63.5% against
+3.4%; at every matched error rate the gap is 25–30 percentage points. The
+observation-level score's advantage is exactly the structural sensitivity noted
+in @scores — taking the log inside the $O$-marginalization.
+
+Both scores now behave as a fixed-$z$ rule should: the false-alarm rate falls
+monotonically with $c$, reaching 0.3–0.5% by $c = 7$. Raising $c$ from 2.0 to 3.5
+is therefore a usable horizon-level correction for Group 1's finding, trading
+about 5 points of power for a sevenfold cut in false alarms.
+
+#block(fill: luma(245), inset: 8pt, radius: 3pt, width: 100%)[
+  *These numbers supersede an earlier version of this table.* Read with the
+  retired per-round variance proxy (@ltv), `sus_1` appeared to have an
+  irreducible false-alarm floor: 9.1% at $c = 3.5$, falling only to 5.8% at
+  $c = 7$ while power drained away, and a false-alarm rate that was
+  *non-monotone* in $alpha$ — 0.374 at $alpha = 1.5$, 0.013 at $alpha = 3$,
+  rising again above $alpha = 7$. Both effects were artefacts of the proxy.
+  With the exact $V_t$ the floor is gone and the $alpha$-profile is monotone
+  (0.002 at $alpha = 1.5$ rising smoothly to 0.063 at $alpha = 20$). The
+  before/after tables are in `results/full_sweep/variance_fix_diff.md`.
+]
 
 == Detection comparison
 
@@ -489,24 +545,82 @@ head-to-head of the score family, producing trajectory, latency, power-curve and
 correlation plots into `results/detection_comparison/`. Superseded by the full
 sweep for headline numbers but retained for its latency and power-curve views.
 
-== Where this leaves the project
+== Where this leaves the project <where>
 
-The detector works: `sus_1` with the corrected variance separates persuasive from
+The detector works: `sus_1` with its exact null variance separates persuasive from
 informative speakers with high power, and the score's calibration is verified at
-both the per-round and running-mean level. The open problem is entirely the
-*stopping boundary*. A fixed-$z$ rule cannot control error over a 150-round
-horizon. Three candidate fixes, in rough order of appeal:
+both the per-round and running-mean level — the per-round ratio sits within 1% of
+1.0 at every $alpha$. The open problem is the *stopping boundary*. At the nominal
+$c = 2$ the test fires on 22% of null runs against a nominal 2.3%, a tenfold
+inflation that Group 1 traced to multiple testing across the horizon rather than
+to the score or its variance.
+
+What has changed is that the problem is now the horizon effect and nothing else.
+With the retired variance proxy the false-alarm rate was also badly
+$alpha$-dependent and could not be tuned below about 6%; with the exact $V_t$ it
+falls monotonically with $c$ and varies only mildly across the grid (0.002 to
+0.066 at $c = 3.5$). Three candidate fixes, in rough order of appeal:
 
 + a law-of-iterated-logarithm boundary,
   $c med overline(sigma)^((t)) sqrt(2 log log t \/ t)$;
 + time-uniform confidence sequences (e.g. Howard–Ramdas betting bounds);
 + an empirically calibrated $c$ from null-simulation quantiles, valid for a
-  committed horizon $T$ — effectively what the $c = 3.5$ row above does.
+  committed horizon $T$.
 
-Beyond that, the switching machinery in `DetectionListener` is implemented but
-unexercised: the natural next study is whether a detector-triggered switch to a
-vigilant $L_1$ recovers Fang's vigilance benefit while paying credulous-listener
-costs up to $tau$.
+The third is now a serious contender rather than a fallback. A single scalar
+cutoff calibrated against pooled null quantiles is only as good as the uniformity
+of the null crossing rate across the grid, and that rate is now monotone in
+$alpha$ and small everywhere; calibrating to the worst cell costs little. The
+first two remain preferable in principle because their boundaries adapt to the
+observed $overline(sigma)^((t))$ and stay valid at a horizon not committed to in
+advance.
+
+All three are evaluable offline: the sweep ran every test as a pure observer with
+$c = infinity$ and recorded $"Sus"^((t))$ and $overline(sigma)^((t))$ at every
+round, so any stopping rule can be scored against the stored trajectories without
+re-simulating. `results/full_sweep_v2/analyses/stopping_rules.ipynb` does exactly
+this for five rules.
+
+== Switching: wiring the detector to a consequence <switching>
+
+The switching machinery is now exercised. `experiments/switching/` runs a
+detector-triggered switch to a vigilant $L_1$ against both $S_1$ and $S_2$
+speakers, and `results/switching/report.md` is its report; the spec is
+`switching_experiments_spec.md`. The headline is that the *retrospective* hard
+switch recovers Fang's vigilance benefit in full and immediately — after $tau$ its
+belief equals the always-vigilant listener's to machine precision, so the entire
+cost of having started credulous is confined to the rounds before $tau$ — while
+the cheaper soft and amnesic switches do not. Under an honest speaker a false
+alarm costs a retrospective switcher essentially nothing, which inverts the usual
+tuning advice: the boundary should be set for power, not for calibration.
+
+Three results from the $S_2$ studies qualify that, and all three are negative in
+a useful way.
+
++ *Level mismatch dominates everything else.* An $L_1$ detector facing an
+  _honest_ $S_2^"inf"$ alarms on 0.7% of runs at $alpha = 1.5$ but *98–100%* at
+  $alpha = 10$, because the statistic tests "is my $S_1^"inf"$ model wrong?" and
+  one extra level of speaker reasoning is enough to make the answer yes. At
+  $alpha = 10$ the honest and persuasive rates are both $approx 1$, so the test
+  has no discriminating power at all. Giving the detector the right level (an
+  $L_2$ inverting the true $S_2$, experiment C2) collapses the false-alarm rate
+  to *0.2%* at $c = 3.5$ and makes it flat in $alpha$ — but costs 22–38 points
+  of power, since a level-2 persuader is genuinely harder to catch.
+
++ *The arms race is about recursion depth, not feedback.* An $S_2$ modelling a
+  _fixed_ vigilant $L_1$ (C1) degrades that listener exactly as much as one
+  modelling the switching listener (B): $|bb(E)[theta] - theta^star| = 0.043$
+  against $0.039$ at $alpha = 10$. What defeats vigilance is the extra level of
+  reasoning, not the closed loop.
+
++ *The speaker does not evade the detector.* Its $"Sus"(t)$ appears to ride just
+  under the boundary, but that plot averages over runs that have not yet
+  crossed, and the conditioning forces the survivor mean below the boundary
+  whatever the speaker does. The selection-free comparison — unconditional
+  crossing rates, B against C1 at matched cells — is flat ($-0.003 plus.minus
+  0.007$). `peek` shows the speaker the _consequence_ of tripping the detector,
+  but the utility is one-round myopic, so it can never trade a loss now for
+  staying undetected later.
 
 = Repository map
 
@@ -516,13 +630,13 @@ costs up to $tau$.
   stroke: (x, y) => if y == 0 { (bottom: 0.7pt) } else { (bottom: 0.3pt + luma(200)) },
   table.header([*Path*], [*Contents*]),
   [`rsa/`], [Core library: `core.py` (Belief, Semantics, World), `environment.py` (observation model, truth conditions), `speaker0–2.py`, `listener0–1.py`, `game.py`, `setup.py`],
-  [`rsa/detection/`], [The detection extension: `scores.py`, `sequential_test.py`, `listener.py`],
-  [`rsa/experimental/`], [Switching listeners and $S_1$ variants; not used in reported results],
-  [`experiments/`], [One package per study: `group1/`, `sus_variants/`, `full_sweep/`, plus the comparison scripts],
-  [`results/`], [Outputs mirroring `experiments/`; each has `run_config.json` and a `summary.md` or `sanity.md`],
+  [`rsa/detection/`], [The detection extension: `scores.py`, `sequential_test.py`, `listener.py` (detector + switching), `replay.py` (offline replay of any listener on a stored stream)],
+  [`rsa/experimental/`], [Superseded switching listeners and $S_1$ variants; not used in reported results],
+  [`experiments/`], [One package per study: `group1/`, `sus_variants/`, `full_sweep/`, `switching/` (one runner, one JSON grid per study), plus the comparison scripts],
+  [`results/`], [Outputs mirroring `experiments/`; each has `run_config.json` and a `summary.md`, `sanity.md` or `report.md`],
   [`docs/`], [This document; `TYPST.md` for the toolchain; `legacy/` for the superseded LaTeX sources],
   [`notebooks/`], [Analysis notebooks: `reproduce_paper`, `suspicion_analysis`, `sandbox`],
-  [`tests/`], [`test_detection.py`, `test_sus_variants.py`],
+  [`tests/`], [`test_detection.py`, `test_sus_variants.py`, `test_switching.py`, `test_speaker2.py`, `test_replay.py`, `test_switching_runner.py`],
   [`archive/`], [Pre-refactor exploratory notebooks, figures, pickles, and rendered reports],
 )
 
@@ -540,10 +654,10 @@ costs up to $tau$.
   [$b_t (O, u)$], [`ScoreContext.B_matrix`], [Per-observation excess surprise],
   [$s_"surp2"^((t))$], [`surp2_score`], [Prior-predictive surprisal],
   [$s_"sus"^((t))$], [`sus1_score`], [Observation-level suspicion],
-  [$sigma_"corr"^(2,(t))$], [`sus1_sigma2_corrected`], [Total-variance–corrected null variance],
+  [$V_t$], [`sus1_sigma2`], [Exact state-only null variance of the score],
   [$"Sus"^((t))$], [`sus1_Sus`, `surp2_Sus`], [Running mean of the score],
   [$overline(sigma)^(2,(t))$], [`*_sigma_bar2*`], [Running average variance],
-  [$tau$], [`SequentialTest.tau_naive` / `.tau_corrected`], [First crossing time; per-score `tau_*` columns in `tau_summary.parquet`],
+  [$tau$], [`SequentialTest.tau`], [First crossing time; per-score `tau_*` columns in `tau_summary.parquet`],
 )
 
 #v(1em)

@@ -1,4 +1,5 @@
 {
+  "status": "complete",
   "grid": {
     "theta_stars": [
       0.1,
@@ -55,8 +56,10 @@
     "pers+": "high",
     "pers-": "low"
   },
-  "git_hash": "cf463e82ddfbc7189d748368d3f0b9588617d441",
-  "wall_seconds": 1956.8490781784058,
+  "git_hash": "6cf7339a98a90abecf08d7fc308c66407ec5a74d",
+  "wall_seconds": 4905.146764278412,
   "total_trajectory_rows": 8910000,
-  "run_date_utc": "2026-04-19T18:20:41Z"
+  "run_date_utc": "2026-08-09T15:27:32Z",
+  "failed_cells": [],
+  "stopped_early": null
 }

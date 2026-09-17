@@ -1,0 +1,1543 @@
+{
+ "status": "complete",
+ "study": "B",
+ "mode": "feedback",
+ "speaker_level": "S2_replica",
+ "listener_level": "L1",
+ "grid": {
+  "theta_stars": [
+   0.1,
+   0.3,
+   0.5,
+   0.7,
+   0.9
+  ],
+  "psi_stars": [
+   "inf",
+   "high",
+   "low"
+  ],
+  "alphas": [
+   1.5,
+   3.0,
+   10.0
+  ],
+  "cs": [
+   2.0,
+   3.5
+  ],
+  "switch_types": [
+   "hard",
+   "soft"
+  ],
+  "n": 1,
+  "m": 7,
+  "rounds": 150,
+  "n_sims_per_cell": 60,
+  "n_cells": 180,
+  "n_conditions_per_cell": 1
+ },
+ "theta_grid": [
+  0.1,
+  0.2,
+  0.3,
+  0.4,
+  0.5,
+  0.6,
+  0.7,
+  0.8,
+  0.9
+ ],
+ "psi_label_map": {
+  "inf": "inf",
+  "high": "pers+",
+  "low": "pers-"
+ },
+ "utterance_index": {
+  "0": [
+   "none",
+   "effective"
+  ],
+  "1": [
+   "none",
+   "ineffective"
+  ],
+  "2": [
+   "some",
+   "effective"
+  ],
+  "3": [
+   "some",
+   "ineffective"
+  ],
+  "4": [
+   "most",
+   "effective"
+  ],
+  "5": [
+   "most",
+   "ineffective"
+  ],
+  "6": [
+   "all",
+   "effective"
+  ],
+  "7": [
+   "all",
+   "ineffective"
+  ]
+ },
+ "obs_index_note": "obs = index into world.generate_all_obs(); obs_count = number of effective sessions",
+ "seed_rule": "seed = (seed_base + cell_index * 1000003 + sim_index) mod 2^31; random.seed and np.random.seed are both set to it before each sim",
+ "seed_base": 1000,
+ "score": "sus_1",
+ "retro_cache": false,
+ "workers": 7,
+ "git_hash": "6cf7339a98a90abecf08d7fc308c66407ec5a74d",
+ "wall_seconds": 2473.3435299396515,
+ "run_date_utc": "2026-09-11T09:04:32Z",
+ "cells": [
+  {
+   "cell_id": 0,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 1,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 2,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 3,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 4,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 5,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 6,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 7,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 8,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 9,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 10,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 11,
+   "theta_star": 0.1,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 12,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 13,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 14,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 15,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 16,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 17,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 18,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 19,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 20,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 21,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 22,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 23,
+   "theta_star": 0.1,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 24,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 25,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 26,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 27,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 28,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 29,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 30,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 31,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 32,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 33,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 34,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 35,
+   "theta_star": 0.1,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 36,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 37,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 38,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 39,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 40,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 41,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 42,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 43,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 44,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 45,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 46,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 47,
+   "theta_star": 0.3,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 48,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 49,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 50,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 51,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 52,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 53,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 54,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 55,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 56,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 57,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 58,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 59,
+   "theta_star": 0.3,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 60,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 61,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 62,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 63,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 64,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 65,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 66,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 67,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 68,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 69,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 70,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 71,
+   "theta_star": 0.3,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 72,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 73,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 74,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 75,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 76,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 77,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 78,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 79,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 80,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 81,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 82,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 83,
+   "theta_star": 0.5,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 84,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 85,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 86,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 87,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 88,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 89,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 90,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 91,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 92,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 93,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 94,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 95,
+   "theta_star": 0.5,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 96,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 97,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 98,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 99,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 100,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 101,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 102,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 103,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 104,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 105,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 106,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 107,
+   "theta_star": 0.5,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 108,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 109,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 110,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 111,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 112,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 113,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 114,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 115,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 116,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 117,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 118,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 119,
+   "theta_star": 0.7,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 120,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 121,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 122,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 123,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 124,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 125,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 126,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 127,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 128,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 129,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 130,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 131,
+   "theta_star": 0.7,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 132,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 133,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 134,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 135,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 136,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 137,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 138,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 139,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 140,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 141,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 142,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 143,
+   "theta_star": 0.7,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 144,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 145,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 146,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 147,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 148,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 149,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 150,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 151,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 152,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 153,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 154,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 155,
+   "theta_star": 0.9,
+   "psi_star": "inf",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 156,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 157,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 158,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 159,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 160,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 161,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 162,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 163,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 164,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 165,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 166,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 167,
+   "theta_star": 0.9,
+   "psi_star": "high",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 168,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 169,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 170,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 171,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 1.5,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 172,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 173,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 174,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 175,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 3.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 176,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 177,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 2.0,
+   "switch_type": "soft"
+  },
+  {
+   "cell_id": 178,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "hard"
+  },
+  {
+   "cell_id": 179,
+   "theta_star": 0.9,
+   "psi_star": "low",
+   "alpha": 10.0,
+   "c": 3.5,
+   "switch_type": "soft"
+  }
+ ],
+ "total_trajectory_rows": 1620000,
+ "n_tau_rows": 10800
+}

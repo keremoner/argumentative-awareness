@@ -7,6 +7,15 @@ Maintains a joint belief P(theta, psi) and reasons about S1's goals.
 - Vigilant (listener_type="vig"): considers all psi types (strategic world)
 
 P_L1(theta, psi | u) is proportional to P_L1(theta, psi) * P_S1(u | theta, psi)
+
+Two update paths exist and are numerically identical:
+
+* ``update(utt)`` reads the speaker's *current* utterance tables through
+  ``speaker.dist_over_utterances_theta_array(theta, psi)``;
+* ``update_with_tables(utt, tables_by_psi)`` takes an explicit
+  ``{psi: (n_obs, n_utt) array}`` triple and never touches the speaker.  This is
+  what makes a retrospective replay possible after the shared speaker object
+  has moved on (``DetectionListener`` snapshots the tables every round).
 """
 
 import numpy as np
@@ -19,7 +28,8 @@ class Listener1:
         """
         thetas: list of theta values
         psis: list of possible speaker goals (e.g. ["inf", "high", "low"])
-        speaker: a Speaker1 object
+        speaker: a Speaker1 object (or anything exposing
+                 ``dist_over_utterances_theta_array`` / ``obs_utt_table_for_psi``)
         listener_type: "inf" (credulous) or "vig" (vigilant)
         """
         if listener_type == "inf":
@@ -29,14 +39,20 @@ class Listener1:
         self.speaker = speaker
         self.world = world
         self.semantics = semantics
-        self.psis = psis
+        self.psis = list(psis)
         self.alpha = alpha
         self.listener_type = listener_type
-        self.thetas = thetas
+        self.thetas = list(thetas)
         self._theta_to_index = {theta: idx for idx, theta in enumerate(self.thetas)}
         self._psi_to_index = {psi: idx for idx, psi in enumerate(self.psis)}
         self._utterances = self.semantics.utterance_space()
         self._obs_list = self.world.generate_all_obs()
+        # (theta, psi) coordinates of every joint state, for the vectorised
+        # table-based likelihood
+        self._joint_theta_idx = np.array(
+            [self._theta_to_index[theta] for theta, _ in joint_values], dtype=int)
+        self._joint_psi_idx = np.array(
+            [self._psi_to_index[psi] for _, psi in joint_values], dtype=int)
 
         self.hist = [deepcopy(self.state_belief)]
         self.suspicion = []
@@ -53,6 +69,10 @@ class Listener1:
         self._obs_psi_array = None
         self._obs_psi_utt_array = {}
         self._prior_utt_array = None
+
+    # ------------------------------------------------------------------
+    # Live path (reads the speaker's current tables)
+    # ------------------------------------------------------------------
 
     def infer_state(self, utt):
         """Posterior P(theta, psi | utt)."""
@@ -152,15 +172,7 @@ class Listener1:
             self._prior_over_utt_array()
         return self.prior_utt
 
-    def update(self, utt):
-        """Update belief after hearing utterance."""
-        self.suspicion.append(self.get_suspicion(utt))
-        self.utt_history.append(utt)
-        new_belief = self.infer_state(utt)
-        self.state_belief = new_belief
-        self.hist.append(deepcopy(self.state_belief))
-
-        # Clear caches
+    def _clear_caches(self):
         self.obs_psi_utt = {}
         self.obs_psi = None
         self.prior_utt = None
@@ -170,7 +182,80 @@ class Listener1:
         self._obs_psi_array = None
         self._obs_psi_utt_array = {}
         self._prior_utt_array = None
+
+    def update(self, utt):
+        """Update belief after hearing utterance (live speaker tables)."""
+        # Legacy single-utterance suspicion (Fang-style).  It needs the
+        # speaker's own internal listener; table-replay stand-ins have none.
+        if getattr(self.speaker, "listener", None) is not None:
+            self.suspicion.append(self.get_suspicion(utt))
+        else:
+            self.suspicion.append(float("nan"))
+        self.utt_history.append(utt)
+        new_belief = self.infer_state(utt)
+        self.state_belief = new_belief
+        self.hist.append(deepcopy(self.state_belief))
+        self._clear_caches()
         return self.state_belief
+
+    # ------------------------------------------------------------------
+    # Table path (explicit per-round speaker tables, speaker never consulted)
+    # ------------------------------------------------------------------
+
+    def likelihoods_from_tables(self, utt, tables_by_psi):
+        """P(u | theta, psi) for every joint state, from explicit tables.
+
+        ``tables_by_psi[psi]`` is the (n_obs, n_utt) matrix P_S(u | O, psi).
+        P(u | theta, psi) = sum_O P(O | theta) P_S(u | O, psi).
+        """
+        utt_idx = self.semantics.utterance_index(utt)
+        obs_prob_table = self.world.obs_prob_table(self.thetas)      # (n_obs, n_theta)
+        per_psi = np.empty((len(self.psis), len(self.thetas)), dtype=float)
+        for psi_idx, psi in enumerate(self.psis):
+            col = np.asarray(tables_by_psi[psi], dtype=float)[:, utt_idx]
+            per_psi[psi_idx] = obs_prob_table.T @ col
+        return per_psi[self._joint_psi_idx, self._joint_theta_idx]
+
+    def infer_state_with_tables(self, utt, tables_by_psi):
+        """Posterior P(theta, psi | utt) using explicit tables (no caching, no mutation)."""
+        posterior = Belief(self.state_belief.values, self.state_belief.prob.copy())
+        posterior.update(self.likelihoods_from_tables(utt, tables_by_psi))
+        return posterior
+
+    def update_with_tables(self, utt, tables_by_psi):
+        """Update from an explicit table triple rather than the live speaker.
+
+        Identical to ``update`` when ``tables_by_psi`` equals the speaker's
+        current tables.  The legacy ``suspicion`` list is not extended.
+        """
+        self.utt_history.append(utt)
+        self.state_belief = self.infer_state_with_tables(utt, tables_by_psi)
+        self.hist.append(deepcopy(self.state_belief))
+        self._clear_caches()
+        return self.state_belief
+
+    def seed_from_theta_marginal(self, theta_probs):
+        """Reset the joint belief to ``theta_probs`` spread uniformly over psi.
+
+        This is the soft-switch initialisation: the theta-marginal is inherited
+        and the listener is direction-blind (uniform over psi).
+        """
+        n_psi = len(self.psis)
+        prior = np.array(
+            [theta_probs.get(theta, 0.0) / n_psi for (theta, psi) in self.state_belief.values],
+            dtype=float,
+        )
+        s = prior.sum()
+        if s > 0:
+            prior = prior / s
+        self.state_belief = Belief(self.state_belief.values, prior)
+        self.hist = [deepcopy(self.state_belief)]
+        self._clear_caches()
+        return self.state_belief
+
+    # ------------------------------------------------------------------
+    # Marginals
+    # ------------------------------------------------------------------
 
     def marginal_theta(self):
         """Marginal distribution over theta."""
@@ -185,6 +270,16 @@ class Listener1:
         for (theta, psi), p in zip(self.state_belief.values, self.state_belief.prob):
             psi_probs[psi] = psi_probs.get(psi, 0.0) + p
         return psi_probs
+
+    def theta_array(self):
+        """Theta-marginal as an ndarray aligned with ``self.thetas``."""
+        out = np.zeros(len(self.thetas), dtype=float)
+        np.add.at(out, self._joint_theta_idx, self.state_belief.prob)
+        return out
+
+    # ------------------------------------------------------------------
+    # Legacy single-utterance suspicion (Fang-style), kept for reference
+    # ------------------------------------------------------------------
 
     def get_suspicion(self, utt):
         """
