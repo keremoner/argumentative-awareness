@@ -18,11 +18,14 @@ venv/
 #   python experiments/group1/run_sims.py
 # Everything else under results/ (run_config.json, sanity.md, summary.md,
 # figures, CSVs) stays tracked so provenance and conclusions travel with the code.
-results/**/*.parquet
-results/**/*.pkl
+# NOTE: these are deliberately UNSCOPED (not results/**). Raw data also lives
+# under archive/switching_legacy/results/, and a results/**-scoped rule silently
+# left ~1 GB of archive/ parquet committable.
+*.parquet
+*.pkl
 # Sweep run logs and the per-cell progress journal (regenerated each run)
-results/**/*.log
-results/**/progress.jsonl
+*.log
+progress.jsonl
 
 # Smoke-test outputs (throwaway)
 results/*_smoke/

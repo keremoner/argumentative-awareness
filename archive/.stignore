@@ -1,0 +1,27 @@
+// Syncthing ignore list for archive/ -- same split as results/.stignore:
+// git carries the small analysis outputs, Syncthing carries the bulk raw data.
+//
+// NOTE: *.pkl is excluded here (unlike in results/.stignore) because the 32
+// .pkl files under archive/ were committed before the ignore rules were
+// widened, so git already carries them. Syncing them here too would give one
+// file two masters.
+
+// --- carried by git, so excluded here ---
+.git
+.ipynb_checkpoints
+.stignore
+*.pkl
+*.png
+*.csv
+*.ipynb
+*.md
+*.json
+*.txt
+*.tex
+*.pdf
+*.html
+*.py
+
+// --- machine-local, regenerated each run ---
+*.log
+progress.jsonl
