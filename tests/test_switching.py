@@ -3,11 +3,12 @@ of switching_experiments_spec.md).
 
 * ``switch_type="hard"`` is retrospective: after the switch the belief equals
   an always-vigilant L1 run on the same utterances with the same snapshotted
-  tables (to 1e-10).
-* ``switch_type="hard_amnesic"`` reproduces the old behaviour (uniform at tau,
-  never sees u_tau, learns from tau+1).
-* ``switch_type="soft"`` inherits the credulous theta-marginal, is uniform over
-  psi, and now also sees u_tau vigilantly.
+  tables (to 1e-10).  It is served by the ``shadow`` vigilant L1 that runs
+  alongside the credulous one from round 1.
+* ``switch_type="soft"`` inherits the credulous theta-marginal *before* u_tau,
+  is uniform over psi, and then sees u_tau vigilantly -- exactly once.  At
+  tau = 1 soft and hard coincide.
+* At tau the credulous listener freezes at tau - 1 (it never absorbs u_tau).
 * Snapshot tables at round i equal the live speaker's tables at round i.
 * ``peek(u)`` equals deepcopy + ``update(u)`` for every u, at several rounds,
   under every switch type, including a round where some u would trigger.
@@ -153,38 +154,6 @@ def test_retro_hard_switch_equals_always_vigilant(theta, psi, alpha):
 
 
 # ---------------------------------------------------------------------------
-# Task 1 (b): hard_amnesic reproduces the old behaviour
-# ---------------------------------------------------------------------------
-
-def test_hard_amnesic_reproduces_old_behaviour():
-    """Old ``hard``: fresh uniform vigilant at tau with no history; it never
-    sees u_tau and is updated live from tau+1.  A vigilant Listener1 forked
-    *after* the switch round must match it exactly, and the joint at tau is
-    uniform."""
-    seed, _ = _find_seed_with_mid_tau(0.5, "high", 10.0, 3.0, "hard_amnesic", 120)
-    random.seed(seed); np.random.seed(seed)
-    world, sem, s0, l0, s1 = _stack(0.5, "high", 10.0)
-    det, _ = _det(s1, world, sem, 3.0, "hard_amnesic", 10.0)
-    fork = None
-    diffs = []
-    for t in range(1, 121):
-        obs = world.sample_obs(); utt = s1.sample_utterance(obs)
-        det.update(utt)
-        if fork is not None:
-            fork.update(utt)
-        elif det.switched:
-            joint = det.vigilant.state_belief.prob
-            np.testing.assert_allclose(joint, 1.0 / joint.size, atol=1e-12)
-            assert det.vigilant.utt_history == []          # no history, no u_tau
-            fork = Listener1(THETAS, PSIS, s1, world, sem, "vig", 10.0)
-        if fork is not None:
-            diffs.append(np.abs(fork.state_belief.prob - det.vigilant.state_belief.prob).max())
-        _advance(world, s0, l0, s1, obs, utt)
-    assert det.switched and det.switch_type == "hard_amnesic"
-    assert max(diffs) < 1e-12
-
-
-# ---------------------------------------------------------------------------
 # Task 1 (c): snapshot tables at round i == live speaker tables at round i
 # ---------------------------------------------------------------------------
 
@@ -226,8 +195,10 @@ def test_soft_switch_inherits_marginal_and_sees_u_tau():
             break
     assert det.switched and det.switch_type == "soft"
     tau = det.switched_at
-    # the credulous listener absorbed u_tau; the seeded joint is its marginal
-    # spread uniformly over psi ...
+    # the credulous listener froze *before* u_tau; the seeded joint is its
+    # marginal spread uniformly over psi ...
+    assert len(det.naive.utt_history) == tau - 1
+    assert det.naive.utt_history == det.utt_history[:tau - 1]
     seeded = det.vigilant.hist[0]
     naive_theta = det.naive.marginal_theta()
     for (th, p), prob in zip(seeded.values, seeded.prob):
@@ -238,6 +209,48 @@ def test_soft_switch_inherits_marginal_and_sees_u_tau():
     ref.update_with_tables(det.utt_history[tau - 1], det.table_history[tau - 1])
     np.testing.assert_allclose(det.state_belief.prob, ref.state_belief.prob, atol=1e-12)
     assert det.vigilant.utt_history == [det.utt_history[tau - 1]]
+    # the belief at tau must NOT be what a credulous absorption of u_tau
+    # followed by a second vigilant absorption would give (the old semantics)
+    cred_after = Listener1(THETAS, ["inf"], s1, world, sem, "inf", 5.0)
+    for u, tab in zip(det.utt_history[:tau], det.table_history[:tau]):
+        cred_after.update_with_tables(u, tab)
+    old = Listener1(THETAS, PSIS, s1, world, sem, "vig", 5.0)
+    old.seed_from_theta_marginal(cred_after.marginal_theta())
+    old.update_with_tables(det.utt_history[tau - 1], det.table_history[tau - 1])
+    assert np.abs(det.state_belief.prob - old.state_belief.prob).max() > 1e-6
+
+
+def test_hard_switch_uses_shadow_and_naive_freezes():
+    seed, _ = _find_seed_with_mid_tau(0.3, "high", 5.0, 2.5, "hard", 80)
+    random.seed(seed); np.random.seed(seed)
+    world, sem, s0, l0, s1 = _stack(0.3, "high", 5.0)
+    det, _ = _det(s1, world, sem, 2.5, "hard", 5.0)
+    for t in range(1, 81):
+        obs = world.sample_obs(); utt = s1.sample_utterance(obs)
+        det.update(utt)
+        _advance(world, s0, l0, s1, obs, utt)
+        if det.switched:
+            break
+    tau = det.switched_at
+    assert det.vigilant is det.shadow                    # no replay: the shadow takes over
+    assert det.vigilant.utt_history == det.utt_history   # u_1 .. u_tau, once each
+    assert det.naive.utt_history == det.utt_history[:tau - 1]
+
+
+@pytest.mark.parametrize("switch_type", SWITCH_TYPES)
+def test_switch_at_round_one_is_uniform_vigilant_plus_u1(switch_type):
+    """With a boundary that is crossed immediately (c << 0), both switch types
+    coincide at tau = 1: a uniform vigilant L1 updated on u_1."""
+    random.seed(21); np.random.seed(21)
+    world, sem, s0, l0, s1 = _stack(0.3, "high", 5.0)
+    det, _ = _det(s1, world, sem, -1e9, switch_type, 5.0)
+    obs = world.sample_obs(); utt = s1.sample_utterance(obs)
+    ref = Listener1(THETAS, PSIS, s1, world, sem, "vig", 5.0)
+    ref.update(utt)
+    det.update(utt)
+    assert det.switched and det.switched_at == 1
+    np.testing.assert_allclose(det.state_belief.prob, ref.state_belief.prob, atol=1e-12)
+    assert det.naive.utt_history == []
 
 
 # ---------------------------------------------------------------------------
@@ -321,7 +334,8 @@ def test_peek_equals_deepcopy_update(switch_type):
     assert det.switched_at == tau and saw_trigger_round
 
 
-def test_peek_retro_cache_gives_identical_results():
+def test_retro_cache_kwarg_is_accepted_and_inert():
+    """``retro_cache`` is kept for callers that still pass it; it changes nothing."""
     seed, tau = _find_seed_with_mid_tau(0.3, "high", 5.0, 3.0, "hard", 60, lo=4)
     random.seed(seed); np.random.seed(seed)
     world, sem, s0, l0, s1 = _stack(0.3, "high", 5.0)
@@ -332,10 +346,6 @@ def test_peek_retro_cache_gives_identical_results():
         for u in sem.utterance_space():
             pa, pb = det_a.peek(u), det_b.peek(u)
             assert max(abs(pa[th] - pb[th]) for th in THETAS) < 1e-12
-        # calling peek twice in a round hits the cache the second time
-        for u in sem.utterance_space():
-            pb2 = det_b.peek(u)
-            assert max(abs(det_a.peek(u)[th] - pb2[th]) for th in THETAS) < 1e-12
         det_a.update(utt); det_b.update(utt)
         _advance(world, s0, l0, s1, obs, utt)
     assert det_a.switched_at == det_b.switched_at == tau

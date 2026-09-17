@@ -5,7 +5,7 @@
 * ``replay_listener`` on stored tables reproduces a live Listener1 and a live
   DetectionListener (all switch types), including tau.
 * ``splice`` equals a direct replay of the retrospective switching listener.
-* ``switching_trajectory`` (soft / hard_amnesic) equals a direct replay.
+* ``switching_trajectory`` (soft) equals a direct replay.
 * ``tau_for_rule`` on observer trajectories equals the live test's tau.
 
 Run with:  python -m pytest tests/test_replay.py -v
@@ -123,7 +123,7 @@ def test_replay_listener1_matches_live(kind):
         assert not np.isnan(traj.psi).any()
 
 
-@pytest.mark.parametrize("switch_type", ["hard", "soft", "hard_amnesic"])
+@pytest.mark.parametrize("switch_type", ["hard", "soft"])
 def test_replay_detection_listener_matches_live(switch_type):
     theta, psi, alpha, rounds, seed, c = 0.3, "high", 5.0, 60, 3, 2.5
     g = _generate(theta, psi, alpha, rounds, seed)
@@ -166,7 +166,7 @@ def test_splice_equals_direct_retro_replay(theta, psi, seed):
     assert np.isnan(spliced.psi[: tau - 1]).all() and not np.isnan(spliced.psi[tau - 1:]).any()
 
 
-@pytest.mark.parametrize("switch_type", ["soft", "hard_amnesic", "hard"])
+@pytest.mark.parametrize("switch_type", ["soft", "hard"])
 def test_switching_trajectory_matches_direct_replay(switch_type):
     theta, psi, alpha, rounds, seed, c = 0.3, "high", 5.0, 80, 14, 2.5
     g = _generate(theta, psi, alpha, rounds, seed)
@@ -178,9 +178,25 @@ def test_switching_trajectory_matches_direct_replay(switch_type):
     _assert_traj_equal(derived, direct)
 
 
+def test_switching_trajectory_soft_at_tau_one_equals_hard():
+    g = _generate(0.3, "high", 5.0, 30, seed=16)
+    soft = switching_trajectory(g["cred"], g["vig"], g["utts"], g["tables"], 1,
+                                "soft", THETAS, g["world"], g["sem"], 5.0)
+    hard = switching_trajectory(g["cred"], g["vig"], g["utts"], g["tables"], 1,
+                                "hard", THETAS, g["world"], g["sem"], 5.0)
+    _assert_traj_equal(soft, hard)
+
+
+def test_switching_trajectory_rejects_unknown_type():
+    g = _generate(0.3, "high", 5.0, 10, seed=17)
+    with pytest.raises(ValueError):
+        switching_trajectory(g["cred"], g["vig"], g["utts"], g["tables"], 3,
+                             "hard_amnesic", THETAS, g["world"], g["sem"], 5.0)
+
+
 def test_switching_trajectory_without_tau_is_credulous():
     g = _generate(0.3, "inf", 3.0, 30, seed=15)
-    for st in ("hard", "soft", "hard_amnesic"):
+    for st in ("hard", "soft"):
         d = switching_trajectory(g["cred"], g["vig"], g["utts"], g["tables"], None,
                                  st, THETAS, g["world"], g["sem"], 3.0)
         np.testing.assert_allclose(d.E_theta, g["cred"].E_theta)

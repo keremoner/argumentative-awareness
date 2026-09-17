@@ -3,11 +3,10 @@ Three-score sequential detection framework for epistemic vigilance.
 
 Mathematical reference: ``three_scores.pdf`` / ``detection_implementation_spec.md``.
 
-This package is intentionally isolated from ``rsa.experimental`` -- it shares
-no code with the existing ``SuspicionSwitchListener`` / ``DiscrepancySwitchListener``
-and provides a clean primitive-level implementation of the three scores
-(``surp2``, ``surp1``, ``sus``) together with a decoupled sequential test
-harness.
+This package is intentionally self-contained: it provides a clean
+primitive-level implementation of the three scores (``surp2``, ``surp1``,
+``sus``) together with a decoupled sequential test harness and the switching
+listener built on it.
 """
 
 from .scores import (

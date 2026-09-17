@@ -396,25 +396,25 @@ anywhere. A negative variance would be a bug in the score function and is
 raised rather than absorbed.
 
 The test is a passive observer by default. `DetectionListener` can optionally let
-a crossing drive a switch from the credulous listener to a full vigilant $L_1$, in
-one of three ways:
+a crossing drive a switch from the credulous listener to a full vigilant $L_1$.
+The tests score $u_tau$ against the credulous belief as it stands; if one
+crosses, the switch happens before any belief update and $u_tau$ is then
+absorbed exactly once, by the vigilant listener. The credulous listener freezes
+at $tau - 1$. Two switch types:
 
 #table(
   columns: (auto, 1fr),
   align: (left, left),
   stroke: (x, y) => if y == 0 { (bottom: 0.7pt) } else { (bottom: 0.3pt + luma(200)) },
   table.header([*`switch_type`*], [*Belief the vigilant $L_1$ starts from at $tau$*]),
-  [`"hard"`], [*Retrospective.* Uniform prior over $(theta, psi)$, updated on the whole history $u_1, dots.c, u_tau$ inclusive of the triggering utterance, then live from $tau + 1$. The result is identical to an always-vigilant $L_1$ on the same stream.],
-  [`"soft"`], [Inherits the credulous $theta$-marginal (which has already absorbed $u_tau$ credulously), spread uniformly over $psi$, then applies $u_tau$ vigilantly. Keeps the pre-$tau$ credulous belief and is direction-blind at $tau$.],
-  [`"hard_amnesic"`], [Uniform prior, no history: never sees $u_tau$ and starts learning at $tau + 1$. A contrast condition only.],
+  [`"hard"`], [*Retrospective.* A vigilant $L_1$ that has listened since round 1: the listener keeps a shadow vigilant $L_1$ updated in parallel with the credulous one, and at $tau$ the shadow becomes the active listener. Identical to an always-vigilant $L_1$ on the same stream, with no replay.],
+  [`"soft"`], [Inherits the credulous $theta$-marginal from *before* $u_tau$, spread uniformly over $psi$ — the pre-$tau$ credulous belief, direction-blind at $tau$ — then applies $u_tau$ vigilantly. At $tau = 1$ it coincides with `"hard"`.],
 )
 
-The retrospective replay cannot call the shared speaker, whose internal $L_0$ has
-moved on: at historical round $i$ it needs the tables
-$P_(S_1)^((i))(u | O, psi)$ as they were at round $i$. `DetectionListener.update`
-therefore snapshots the three $8 times 8$ tables every round into
-`table_history`, and `Listener1.update_with_tables` updates from an explicit
-table triple instead of consulting the speaker. The same primitive makes any
+Every sub-listener is updated from the same per-round snapshot of the speaker's
+tables $P_(S_1)^((i))(u | O, psi)$, which `DetectionListener.update` also
+records into `table_history`; `Listener1.update_with_tables` updates from an
+explicit table triple instead of consulting the speaker. That is what makes any
 listener replayable offline on a stored utterance stream
 (`rsa/detection/replay.py`).
 

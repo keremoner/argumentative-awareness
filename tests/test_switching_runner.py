@@ -32,7 +32,7 @@ import run as R  # noqa: E402
 def _cfg(tmp_path, **kw):
     grid = dict(study="T", mode="offline", speaker_level="S1", listener_level="L1",
                 out_dir=str(tmp_path / "out"), theta_stars=[0.5], psi_stars=["high"],
-                alphas=[5.0], cs=[2.0, 3.5], switch_types=["hard", "soft", "hard_amnesic"],
+                alphas=[5.0], cs=[2.0, 3.5], switch_types=["hard", "soft"],
                 n_sims=3, rounds=20, n=1, m=7, seed_base=7, workers=1)
     grid.update(kw)
     p = tmp_path / "grid.json"
@@ -52,14 +52,15 @@ def test_offline_layout_and_invariants(tmp_path):
     cfg = _cfg(tmp_path)
     summary, df, tau = _run_first_cell(cfg)
     T, n_sims = cfg["rounds"], cfg["n_sims"]
-    assert len(df) == n_sims * T * 6 and summary["rows"] == len(df)
+    n_cond = len(cfg["cs"]) * len(cfg["switch_types"])
+    assert len(df) == n_sims * T * n_cond and summary["rows"] == len(df)
     for col in ("study", "cell_id", "sim", "round", "theta_star", "psi_star", "alpha", "c",
                 "switch_type", "speaker_level", "listener_level", "obs", "obs_count", "utt",
                 "sus1_score", "sus1_sigma2", "sus1_Sus", "sus1_sigma_bar2", "crossed", "switched",
                 "E_theta_cred", "std_theta_cred", "E_theta_vig", "std_theta_vig",
                 "p_psi_vig_inf", "E_theta_switch", "std_theta_switch", "p_psi_switch_high", "seed"):
         assert col in df.columns, col
-    assert set(df["switch_type"]) == {"hard", "soft", "hard_amnesic"} and set(df["c"]) == {2.0, 3.5}
+    assert set(df["switch_type"]) == {"hard", "soft"} and set(df["c"]) == {2.0, 3.5}
     # same stream across conditions
     base = df[(df.c == 2.0) & (df.switch_type == "hard")].sort_values(["sim", "round"])
     for (c, st), g in df.groupby(["c", "switch_type"]):
@@ -86,7 +87,7 @@ def test_offline_layout_and_invariants(tmp_path):
                 assert trow.tau == -1 and sw.sum() == 0
                 np.testing.assert_allclose(gs["E_theta_switch"], gs["E_theta_cred"], atol=1e-6)
     assert (df["obs_count"] == 7 - df["obs"]).all()          # obs index 0 == 7 effective sessions
-    assert len(tau) == n_sims * 6
+    assert len(tau) == n_sims * n_cond
 
 
 def test_offline_seeds_reproducible(tmp_path):

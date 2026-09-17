@@ -214,13 +214,11 @@ def switching_trajectory(cred_traj, vig_traj, utts, tables_per_round, tau,
     """Trajectory of a switching listener that fires at ``tau`` (1-based, or
     None), derived offline from the stored stream.
 
-    * ``"hard"``          -- ``splice`` (exact).
-    * ``"soft"``          -- credulous for t < tau; at tau the vigilant L1 is
-                             seeded with the credulous theta-marginal *after*
-                             u_tau, uniform over psi, then updated on
-                             u_tau .. u_T with the stored tables.
-    * ``"hard_amnesic"``  -- credulous for t < tau; uniform at tau; a fresh
-                             vigilant L1 updated on u_{tau+1} .. u_T.
+    * ``"hard"``  -- ``splice`` (exact).
+    * ``"soft"``  -- credulous for t < tau; at tau the vigilant L1 is seeded
+                     with the credulous theta-marginal *before* u_tau (uniform
+                     when tau = 1), uniform over psi, then updated on
+                     u_tau .. u_T with the stored tables.
     """
     if tau is None:
         out = cred_traj.copy()
@@ -229,26 +227,24 @@ def switching_trajectory(cred_traj, vig_traj, utts, tables_per_round, tau,
         return out
     if switch_type == "hard":
         return splice(cred_traj, vig_traj, tau)
+    if switch_type != "soft":
+        raise ValueError(f"unknown switch_type {switch_type!r}")
 
     T = len(utts)
     k = int(tau) - 1
+    if k < 0 or k >= T:
+        raise ValueError(f"tau={tau} outside 1..{T}")
     out = cred_traj.copy()
     out.psi[:] = np.nan
     out.switched_at = int(tau)
     speaker = TableSpeaker(tables_per_round, thetas, world, semantics)
     vig = Listener1(thetas, list(psis), speaker, world, semantics, "vig", alpha)
 
-    if switch_type == "soft":
-        theta_probs = dict(zip(thetas, cred_traj.theta[k]))
-        vig.seed_from_theta_marginal(theta_probs)
-        for i in range(k, T):
-            vig.update_with_tables(utts[i], tables_per_round[i])
-            record_round(out, i, vig)
-        return out
-    if switch_type == "hard_amnesic":
-        record_round(out, k, vig)          # uniform at tau, never sees u_tau
-        for i in range(k + 1, T):
-            vig.update_with_tables(utts[i], tables_per_round[i])
-            record_round(out, i, vig)
-        return out
-    raise ValueError(f"unknown switch_type {switch_type!r}")
+    # cred_traj.theta[k - 1] is the credulous marginal after u_{tau-1}, i.e.
+    # before u_tau; at tau = 1 the seed is the uniform prior.
+    if k > 0:
+        vig.seed_from_theta_marginal(dict(zip(thetas, cred_traj.theta[k - 1])))
+    for i in range(k, T):
+        vig.update_with_tables(utts[i], tables_per_round[i])
+        record_round(out, i, vig)
+    return out

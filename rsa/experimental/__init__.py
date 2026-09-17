@@ -1,8 +1,12 @@
 """
-Experimental variants of Speaker1 and Listener.
+Experimental variants of Speaker1.
 
 These implement alternative informativeness and persuasiveness formulations
 beyond the paper's default (obs informativeness + E[theta] persuasiveness).
+
+The switching listeners that used to live here (``Listener1Switch``,
+``SuspicionSwitchListener``, ...) were superseded by
+``rsa.detection.DetectionListener`` and have been removed.
 """
 
 from .speaker1_variants import (
@@ -11,15 +15,4 @@ from .speaker1_variants import (
     Speaker1_state_inf_new_pers1,
     Speaker1_state_inf_new_pers2,
     Speaker1_state_inf_new_pers4,
-)
-from .listener_switch import (
-    Listener1Switch,
-    Listener2Switch,
-    SuspicionSwitchListenerS0,
-    SuspicionSwitchListener,
-    DiscrepancySwitchListener,
-    simulate_suspicion_listener,
-    simulate_comparison,
-    estimate_fpr,
-    estimate_tpr,
 )

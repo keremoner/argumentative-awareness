@@ -16,7 +16,8 @@ Core modules:
 
 Experimental variants in rsa.experimental:
     - speaker1_variants: alternative informativeness/persuasiveness formulations
-    - listener_switch: Listener1Switch, Listener2Switch
+
+Detection and switching (credulous -> vigilant) live in rsa.detection.
 """
 
 from .core import Belief, Semantics, World

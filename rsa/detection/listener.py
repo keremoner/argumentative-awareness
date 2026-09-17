@@ -6,30 +6,32 @@ By default every attached test is a passive observer -- no switching, no
 coupling between tests.  Enabling ``switch_enabled`` on one test authorises
 it to drive a switch to a full vigilant L1 at its stopping time tau.
 
+Round structure at tau
+----------------------
+The tests score u_tau against the credulous listener *as it stands* (its
+belief before u_tau).  If a switch-enabled test crosses, the switch happens
+right there, before any belief update, and u_tau is then absorbed exactly
+once -- by the vigilant listener.  The credulous listener freezes at tau - 1;
+it is never read again.
+
 Switch types
 ------------
 ``"hard"`` (retrospective)
-    A fresh vigilant L1 with a uniform prior over (theta, psi) is updated on the
-    *whole* utterance history ``u_1 .. u_tau`` (inclusive of the triggering
-    utterance) and then continues live from tau + 1.  The replay at historical
-    round i uses the speaker tables *as they were at round i* -- the shared
-    speaker object only holds its current tables, so ``update`` snapshots the
-    ``{psi: (n_obs, n_utt)}`` triple every round into ``table_history``.
-    After the switch the listener's belief equals an always-vigilant L1 run
-    on the same utterances.
+    A vigilant L1 that has been listening from round 1.  The listener keeps a
+    ``shadow`` vigilant L1 updated in parallel with the credulous one every
+    round, so at tau the shadow simply becomes the active listener: its belief
+    equals an always-vigilant L1 run on u_1 .. u_tau, with no replay needed.
 
 ``"soft"``
-    The vigilant L1 inherits the credulous theta-marginal (which has already
-    absorbed u_tau credulously) spread uniformly over psi, i.e. it keeps the
-    pre-tau credulous belief and is direction-blind at tau.  It is then updated
-    on u_tau with the vigilant likelihood, so the triggering utterance is seen
-    twice: once credulously (inside the inherited marginal) and once
-    vigilantly.  Documented, deliberate; the credulous absorption is left as is.
+    A fresh vigilant L1 seeded with the credulous theta-marginal *before*
+    u_tau, spread uniformly over psi -- it keeps the pre-tau credulous belief
+    and is direction-blind at tau -- and then updated on u_tau vigilantly.
+    At tau = 1 this coincides with ``"hard"``.
 
-``"hard_amnesic"``
-    The pre-Task-1 ``"hard"`` behaviour, kept only as a contrast condition: a
-    fresh uniform vigilant L1 with no history, which never sees u_tau and
-    starts learning at tau + 1.
+``table_history`` records the speaker's ``{psi: P(u | O, psi)}`` tables as they
+were when each utterance arrived.  The listener itself no longer needs them
+(every sub-listener is updated live), but the offline runners derive
+switching trajectories from stored streams and read them from here.
 """
 
 from __future__ import annotations
@@ -41,7 +43,7 @@ from ..listener1 import Listener1
 from .scores import ScoreContext
 
 
-SWITCH_TYPES = ("hard", "soft", "hard_amnesic")
+SWITCH_TYPES = ("hard", "soft")
 
 
 class DetectionListener:
@@ -63,10 +65,9 @@ class DetectionListener:
         tests : list of SequentialTest, optional
             Zero or more detection tests.  Passive unless ``switch_enabled``.
         retro_cache : bool
-            If True, ``peek`` caches the retrospective vigilant belief on the
-            current ``utt_history`` once per round (it is the same for every
-            candidate utterance; only the final update differs).  Off by
-            default; results are identical either way (tested).
+            Accepted for backward compatibility and ignored.  The hard switch
+            used to replay the history inside ``peek``; the shadow vigilant
+            listener makes that (and its cache) unnecessary.
         """
         self.thetas = list(thetas)
         self.psis = list(psis)
@@ -83,6 +84,9 @@ class DetectionListener:
             self.thetas, ["inf"], speaker, world, semantics,
             listener_type="inf", alpha=alpha,
         )
+        # Always-vigilant L1 run alongside the naive one from round 1; becomes
+        # the active listener under a hard switch.
+        self.shadow = self._fresh_vigilant()
         self.vigilant = None
         self.switched = False
         self.switched_at = None
@@ -93,7 +97,7 @@ class DetectionListener:
         self.utt_history = []
         self.table_history = []    # per round: {psi: (n_obs, n_utt) array}
         self.hist = [deepcopy(self.naive.state_belief)]
-        self._retro_cached = None  # (n_replayed, Listener1) when retro_cache
+        self._soft_scratch = None  # reusable seeded vigilant L1 for soft peeks
 
     # ------------------------------------------------------------------
     # State access
@@ -135,6 +139,10 @@ class DetectionListener:
             self._l1_theta_array(), u_obs,
         )
 
+    def _live_tables(self):
+        """The speaker's current ``{psi: P(u | O, psi)}`` tables, uncopied."""
+        return {psi: self.speaker.obs_utt_table_for_psi(psi) for psi in self.psis}
+
     def snapshot_tables(self):
         """Copy of the speaker's current ``{psi: P(u | O, psi)}`` tables."""
         return {
@@ -153,17 +161,19 @@ class DetectionListener:
     # ------------------------------------------------------------------
 
     def update(self, utt):
-        """Process one utterance: run tests, update beliefs, maybe switch."""
+        """Process one utterance: run tests, maybe switch, then update beliefs."""
         self.round += 1
         t = self.round
 
         # Snapshot the tables that generate/explain u_t *before* anything
-        # moves.  The history is what a retrospective switch replays.
+        # moves; every sub-listener is updated from this same triple.
         tables = self.snapshot_tables()
         self.utt_history.append(utt)
         self.table_history.append(tables)
 
-        if not self.switched:
+        if self.switched:
+            self.vigilant.update_with_tables(utt, tables)
+        else:
             ctx = self.build_context(utt)
             for test in self.tests:
                 crossed = test.observe(ctx)
@@ -171,12 +181,14 @@ class DetectionListener:
                         and self.switch_driver is None):
                     self.switch_driver = test
 
-            self.naive.update(utt)
-
             if self.switch_driver is not None and self.switch_driver.tau == t:
+                # Switch first, then let the vigilant listener absorb u_tau
+                # once.  The naive listener freezes at t - 1.
                 self._trigger_switch(self.switch_driver.switch_type)
-        else:
-            self.vigilant.update_with_tables(utt, tables)
+                self.vigilant.update_with_tables(utt, tables)
+            else:
+                self.naive.update(utt)
+                self.shadow.update_with_tables(utt, tables)
 
         self.hist.append(deepcopy(self.state_belief))
         return self.state_belief
@@ -188,20 +200,14 @@ class DetectionListener:
         self.switched_at = self.round
         self.switch_type = switch_type
 
-        vig = self._fresh_vigilant()
         if switch_type == "hard":
-            # Retrospective: replay u_1..u_tau with the per-round snapshots.
-            for u, tab in zip(self.utt_history, self.table_history):
-                vig.update_with_tables(u, tab)
-        elif switch_type == "soft":
-            # Inherit the credulous theta-marginal (already includes u_tau,
-            # credulously), uniform over psi, then see u_tau vigilantly.
+            # The shadow has seen u_1 .. u_{tau-1} vigilantly; it takes over.
+            self.vigilant = self.shadow
+        else:
+            # Pre-u_tau credulous marginal, uniform over psi.
+            vig = self._fresh_vigilant()
             vig.seed_from_theta_marginal(self.naive.marginal_theta())
-            vig.update_with_tables(self.utt_history[-1], self.table_history[-1])
-        elif switch_type == "hard_amnesic":
-            pass  # uniform joint prior, no history, never sees u_tau
-        self.vigilant = vig
-        self._retro_cached = None
+            self.vigilant = vig
 
     # ------------------------------------------------------------------
     # One-step peek (no mutation)
@@ -228,20 +234,6 @@ class DetectionListener:
                 return test
         return None
 
-    def _retro_vigilant(self):
-        """Vigilant L1 replayed on the current ``utt_history`` (all rounds)."""
-        n = len(self.utt_history)
-        if self.retro_cache and self._retro_cached is not None:
-            n_done, cached = self._retro_cached
-            if n_done == n:
-                return cached
-        vig = self._fresh_vigilant()
-        for u, tab in zip(self.utt_history, self.table_history):
-            vig.update_with_tables(u, tab)
-        if self.retro_cache:
-            self._retro_cached = (n, vig)
-        return vig
-
     def peek(self, utt):
         """Theta-marginal the listener would hold after hearing ``utt`` --
         including the detector update and a switch if ``utt`` would cross the
@@ -257,16 +249,12 @@ class DetectionListener:
             return self.naive.infer_state(utt).marginal(0)
 
         switch_type = driver.switch_type
-        if switch_type == "hard_amnesic":
-            n = len(self.thetas)
-            return {theta: 1.0 / n for theta in self.thetas}
-
-        tables = self.snapshot_tables()
         if switch_type == "hard":
-            vig = self._retro_vigilant()
-            return vig.infer_state_with_tables(utt, tables).marginal(0)
+            return self.shadow.infer_state(utt).marginal(0)
         if switch_type == "soft":
-            vig = self._fresh_vigilant()
-            vig.seed_from_theta_marginal(self.naive.infer_state(utt).marginal(0))
-            return vig.infer_state_with_tables(utt, tables).marginal(0)
-        raise ValueError(f"unknown switch_type {switch_type!r}")
+            if self._soft_scratch is None:
+                self._soft_scratch = self._fresh_vigilant()
+            scratch = self._soft_scratch
+            scratch.seed_from_theta_marginal(self.naive.marginal_theta())
+            return scratch.infer_state_with_tables(utt, self._live_tables()).marginal(0)
+        raise ValueError(f"unknown switch_type {switch_type!r}; expected one of {SWITCH_TYPES}")
