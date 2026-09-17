@@ -1,0 +1,23 @@
+// Syncthing ignore list for the raw-simulation-data sync.
+//
+// Division of labour: git carries the analysis outputs (figures, CSVs,
+// notebooks, run_config.json, summaries) -- those are small and tracked.
+// Syncthing carries ONLY the raw .parquet / .pkl trajectories, which are
+// gitignored because they are ~4.9 GB. Keeping the two disjoint means
+// Syncthing never fights a git checkout.
+
+// --- carried by git, so excluded here ---
+.git
+.ipynb_checkpoints
+.stignore
+*.png
+*.csv
+*.ipynb
+*.md
+*.json
+*.txt
+*.tex
+
+// --- machine-local, regenerated each run ---
+*.log
+progress.jsonl

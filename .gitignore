@@ -13,12 +13,16 @@ venv/
 # Raw simulation data. Large (~2.4 GB) and fully reproducible: every run is
 # seeded by _seed_for(cell_id, sim_idx, seed_base) and run_config.json records
 # seed_base + git_hash. Regenerate with, e.g.:
-#   python experiments/full_sweep/run_sweep.py          (~33 min for the full grid)
+#   python experiments/full_sweep/run_sweep.py          (~100 min for the full grid;
+#                                                        resumable, rerun to continue)
 #   python experiments/group1/run_sims.py
 # Everything else under results/ (run_config.json, sanity.md, summary.md,
 # figures, CSVs) stays tracked so provenance and conclusions travel with the code.
 results/**/*.parquet
 results/**/*.pkl
+# Sweep run logs and the per-cell progress journal (regenerated each run)
+results/**/*.log
+results/**/progress.jsonl
 
 # Smoke-test outputs (throwaway)
 results/*_smoke/
@@ -37,3 +41,7 @@ docs/**/*.aux
 docs/**/*.log
 docs/**/*.out
 docs/**/*.synctex.gz
+
+# Syncthing metadata (raw results/ data is synced peer-to-peer, not via git)
+.stfolder/
+.stversions/
