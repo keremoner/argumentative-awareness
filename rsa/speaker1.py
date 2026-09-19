@@ -8,12 +8,20 @@ Utterance probability:
   P_S1(u | O, psi, alpha) proportional to
   Truth(u; O) * Inf(u; O)^(alpha*beta) * PersStr(u; psi)^(alpha*(1-beta))
 where beta=1 if psi=inf, beta=0 otherwise.
+
+Every cached table is a function of the internal listener's state.  The caches
+are stamped with the listener's ``version`` and dropped the moment it changes,
+so the policy can never be served from a listener state that has moved on
+(see ``rsa.core`` for the protocol).
 """
 
 import numpy as np
 import random
 from copy import deepcopy
 from .core import Belief
+
+
+PSI_VALUES = ("inf", "high", "low")
 
 
 class Speaker1:
@@ -26,6 +34,8 @@ class Speaker1:
         alpha: rationality parameter
         psi: speaker goal ("inf", "high"=pers+, "low"=pers-)
         """
+        if psi not in PSI_VALUES:
+            raise ValueError(f"unknown psi {psi!r}; expected one of {PSI_VALUES}")
         self.thetas = thetas
         self.belief_theta = Belief(thetas)
         self.listener = listener
@@ -37,8 +47,21 @@ class Speaker1:
         self._utterances = self.semantics.utterance_space()
         self._theta_to_index = {theta: idx for idx, theta in enumerate(self.thetas)}
         self._obs_list = self.world.generate_all_obs()
+        self._version = 0
+        self._dep_version = None
+        self.clear_caches()
 
-        # Caches
+    # ------------------------------------------------------------------
+    # Cache/version protocol
+    # ------------------------------------------------------------------
+
+    @property
+    def version(self):
+        """Fingerprint of everything the tables depend on: this agent's own
+        updates and the internal listener's version (recursively)."""
+        return (self._version, getattr(self.listener, "version", None))
+
+    def clear_caches(self):
         self.utterance_theta_psi = {}
         self.informativeness_obs_utt = {}
         self.persuasiveness_psi = {}
@@ -46,6 +69,17 @@ class Speaker1:
         self._utterances_obs_psi_array = {}
         self._utterance_theta_psi_array = {}
         self._obs_utt_table_psi = {}
+
+    def _sync(self):
+        """Drop every cache if the internal listener has moved since it was filled."""
+        v = getattr(self.listener, "version", None)
+        if v != self._dep_version:
+            self.clear_caches()
+            self._dep_version = v
+
+    # ------------------------------------------------------------------
+    # Belief over theta (bookkeeping only; not used by the policy)
+    # ------------------------------------------------------------------
 
     def infer_state(self, obs):
         """Posterior P(theta | obs)."""
@@ -58,16 +92,61 @@ class Speaker1:
         """Update belief and clear caches."""
         self.belief_theta = self.infer_state(obs)
         self.hist.append(deepcopy(self.belief_theta))
-        self.utterance_theta_psi = {}
-        self.informativeness_obs_utt = {}
-        self.persuasiveness_psi = {}
-        self.utterances_obs_psi = {}
-        self._utterances_obs_psi_array = {}
-        self._utterance_theta_psi_array = {}
-        self._obs_utt_table_psi = {}
+        self._version += 1
+        self.clear_caches()
         return self.belief_theta.as_dict()
 
+    # ------------------------------------------------------------------
+    # Utility terms
+    # ------------------------------------------------------------------
+
+    def get_informativeness_obs_utt(self, obs, utt):
+        """
+        Observation-level informativeness: P_L0(obs | utt).
+        How likely is the literal listener to recover obs from utt.
+        """
+        self._sync()
+        if (obs, utt) in self.informativeness_obs_utt:
+            return self.informativeness_obs_utt[(obs, utt)]
+        result = self.listener.infer_obs(utt)
+        for obs_case, prob in result.items():
+            self.informativeness_obs_utt[(obs_case, utt)] = prob
+        return result[obs]
+
+    def get_persuasiveness(self, psi, obs=None):
+        """
+        Default persuasiveness (paper version):
+          - "inf": PersStr = 1 (no persuasion)
+          - "high" (pers+): PersStr = E_L0[theta | u]
+          - "low" (pers-): PersStr = 1 - E_L0[theta | u]
+        """
+        if psi not in PSI_VALUES:
+            raise ValueError(f"unknown psi {psi!r}; expected one of {PSI_VALUES}")
+        self._sync()
+        if psi in self.persuasiveness_psi:
+            return self.persuasiveness_psi[psi]
+        result = {u: 0.0 for u in self._utterances}
+
+        for utt in self._utterances:
+            if psi == "inf":
+                result[utt] = 1
+            elif psi == "high":
+                for theta, theta_prob in self.listener.infer_state(utt).as_dict().items():
+                    result[utt] += theta * theta_prob
+            elif psi == "low":
+                for theta, theta_prob in self.listener.infer_state(utt).as_dict().items():
+                    result[utt] += theta * theta_prob
+                result[utt] = 1 - result[utt]
+
+        self.persuasiveness_psi[psi] = result
+        return result
+
+    # ------------------------------------------------------------------
+    # Policy
+    # ------------------------------------------------------------------
+
     def _dist_over_utterances_obs_array(self, obs, psi):
+        self._sync()
         if (obs, psi) in self._utterances_obs_psi_array:
             return self._utterances_obs_psi_array[(obs, psi)]
 
@@ -92,54 +171,23 @@ class Speaker1:
         self.utterances_obs_psi[(obs, psi)] = dict(zip(self._utterances, probs))
         return probs
 
-    def get_informativeness_obs_utt(self, obs, utt):
-        """
-        Observation-level informativeness: P_L0(obs | utt).
-        How likely is the literal listener to recover obs from utt.
-        """
-        if (obs, utt) in self.informativeness_obs_utt:
-            return self.informativeness_obs_utt[(obs, utt)]
-        result = self.listener.infer_obs(utt)
-        for obs_case, prob in result.items():
-            self.informativeness_obs_utt[(obs_case, utt)] = prob
-        return result[obs]
-
-    def get_persuasiveness(self, psi, obs=None):
-        """
-        Default persuasiveness (paper version):
-          - "inf": PersStr = 1 (no persuasion)
-          - "high" (pers+): PersStr = E_L0[theta | u]
-          - "low" (pers-): PersStr = 1 - E_L0[theta | u]
-        """
-        if psi in self.persuasiveness_psi:
-            return self.persuasiveness_psi[psi]
-        result = {u: 0.0 for u in self._utterances}
-
-        for utt in self._utterances:
-            if psi == "inf":
-                result[utt] = 1
-            elif psi == "high":
-                for theta, theta_prob in self.listener.infer_state(utt).as_dict().items():
-                    result[utt] += theta * theta_prob
-            elif psi == "low":
-                for theta, theta_prob in self.listener.infer_state(utt).as_dict().items():
-                    result[utt] += theta * theta_prob
-                result[utt] = 1 - result[utt]
-
-        self.persuasiveness_psi[psi] = result
-        return result
-
     def dist_over_utterances_obs(self, obs, psi):
         """
         P_S1(u | O, psi) proportional to
         Truth(u;O) * Inf^(alpha*beta) * PersStr^(alpha*(1-beta))
         """
+        self._sync()
         if (obs, psi) not in self.utterances_obs_psi:
             self._dist_over_utterances_obs_array(obs, psi)
         return self.utterances_obs_psi[(obs, psi)]
 
+    def dist_over_utterances_obs_array(self, obs, psi):
+        """P_S1(u | O, psi) as an array aligned with the utterance space."""
+        return self._dist_over_utterances_obs_array(obs, psi)
+
     def dist_over_utterances_theta(self, theta, psi):
         """P(u | theta, psi) marginalizing over observations."""
+        self._sync()
         if (theta, psi) in self.utterance_theta_psi:
             return self.utterance_theta_psi[(theta, psi)]
         theta_idx = self._theta_to_index[theta]
@@ -152,11 +200,13 @@ class Speaker1:
         return result
 
     def dist_over_utterances_theta_array(self, theta, psi):
+        self._sync()
         if (theta, psi) not in self._utterance_theta_psi_array:
             self.dist_over_utterances_theta(theta, psi)
         return self._utterance_theta_psi_array[(theta, psi)]
 
     def obs_utt_table_for_psi(self, psi):
+        self._sync()
         if psi not in self._obs_utt_table_psi:
             self._obs_utt_table_psi[psi] = np.vstack(
                 [self._dist_over_utterances_obs_array(obs, psi) for obs in self._obs_list]

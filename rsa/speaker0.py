@@ -3,6 +3,9 @@ Literal Speaker S0.
 
 Chooses uniformly among all literally true utterances for a given observation.
 Maintains a Bayesian belief over theta that updates with each new observation.
+
+``version`` is a fingerprint of the agent's state; see ``rsa.core`` for the
+protocol shared by every agent.
 """
 
 import random
@@ -22,6 +25,13 @@ class Speaker0:
         self._utterances = self.semantics.utterance_space()
         self._theta_to_index = {theta: idx for idx, theta in enumerate(self.thetas)}
         self._obs_utt_probs = self._build_obs_utt_probs()
+        self._version = 0
+
+    @property
+    def version(self):
+        """State fingerprint.  S0's policy depends on nothing that changes, but
+        the belief does, and downstream agents compare the whole tuple."""
+        return (self._version,)
 
     def _build_obs_utt_probs(self):
         truth_table = self.semantics.truth_table(self.world).astype(float)
@@ -39,6 +49,7 @@ class Speaker0:
         """Update belief after observing data."""
         self.belief_theta = self.infer_state(obs)
         self.hist.append(deepcopy(self.belief_theta))
+        self._version += 1
         return self.belief_theta.as_dict()
 
     def dist_over_utterances_obs(self, obs):

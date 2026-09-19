@@ -56,7 +56,7 @@ from rsa.listener1 import Listener1  # noqa: E402
 from rsa.speaker2 import Speaker2  # noqa: E402
 from rsa.detection import (  # noqa: E402
     DetectionListener, SequentialTest, SUS_VARIANT_FNS,
-    tau_for_rule, switching_trajectory,
+    tau_for_rule, switching_trajectory, make_switching_listener,
 )
 from rsa.detection.replay import empty_trajectory, record_round  # noqa: E402
 
@@ -104,10 +104,10 @@ def load_config(path, overrides):
         raise ValueError(f"unknown mode {cfg['mode']!r}")
     if cfg["mode"] == "offline" and cfg["speaker_level"] not in ("S1", "S2_vig", "S2_cred"):
         raise ValueError("offline mode supports speaker_level S1, S2_vig or S2_cred")
-    if cfg["speaker_level"] == "S2_cred" and cfg["listener_level"] != "L2":
-        raise ValueError("speaker_level S2_cred is the L2-detector study (C2): set listener_level L2")
-    if cfg["speaker_level"] != "S2_cred" and cfg["listener_level"] != "L1":
-        raise ValueError("listener_level L2 requires speaker_level S2_cred")
+    if cfg["listener_level"] not in ("L1", "L2"):
+        raise ValueError("listener_level must be L1 or L2")
+    if cfg["listener_level"] == "L2" and cfg["speaker_level"] != "S2_cred":
+        raise ValueError("listener_level L2 (the C2 detector study) requires speaker_level S2_cred")
     if cfg["mode"] == "feedback" and cfg["speaker_level"] != "S2_replica":
         raise ValueError("feedback mode requires speaker_level S2_replica")
     return cfg
@@ -133,7 +133,16 @@ def build_cells(cfg):
 
 
 def seed_for(cell_index: int, sim_index: int, base: int) -> int:
+    """Seed of the global RNG (speaker utterance sampling): unique per (cell, sim)."""
     return int((base + cell_index * 1_000_003 + sim_index) % (2 ** 31))
+
+
+def obs_seed_for(sim_index: int, base: int) -> int:
+    """Seed of the world's private observation RNG: depends on the sim index
+    only, so sim i draws the same observation stream in every cell (identical
+    within a theta*, the same uniforms through a different CDF across theta*)
+    -- common random numbers for every between-condition comparison."""
+    return int((base + 7_919 * (sim_index + 1)) % (2 ** 31))
 
 
 def n_conditions(cfg):
@@ -235,18 +244,21 @@ def run_offline_sim(cfg, cell, sim_idx, rows, base_row, conditions, tau_records)
     alpha = cell["alpha"]
     world, sem, s0, l0, s1 = _stack(thetas, cell["theta_star"], cell["psi_star"], alpha,
                                     cfg["n"], cfg["m"])
+    world.rng = random.Random(obs_seed_for(sim_idx, cfg["seed_base"]))
 
     obs_test = _test(cfg, float("inf"), "hard", False)
     internal = None
     if cfg["speaker_level"] == "S2_cred":
-        # C2: the data-generating S2 models a credulous L1; the listeners are
-        # L2s whose internal model is that same S2 (its "inf" tables are the
-        # properly specified null).  Speaker and listener model share one
-        # object, exactly as the S1 studies share the S1 object.
+        # The data-generating S2 models a credulous L1 (``internal``).
+        #   listener_level L1 (Fang's cooperative dyad): the listeners invert
+        #     S1; ``cred`` below equals ``internal`` round for round, so the
+        #     credulous column is the matched S2 <-> credulous-L1 dyad.
+        #   listener_level L2 (C2): the listeners invert this same S2, whose
+        #     "inf" tables are then the properly specified null.
         internal = Listener1(thetas, ["inf"], s1, world, sem, "inf", alpha)
         s2 = Speaker2(thetas, internal, sem, world, alpha=alpha, psi=cell["psi_star"])
         speaker = s2
-        model = s2
+        model = s2 if cfg["listener_level"] == "L2" else s1
     else:
         model = s1
         s2 = None
@@ -326,10 +338,14 @@ def run_feedback_sim(cfg, cell, sim_idx, rows, base_row, tau_records):
     # The listener's model is S1-inf (psi of this S1 object is irrelevant: only
     # its tables are read); the data-generating speaker is the S2 below.
     world, sem, s0, l0, s1 = _stack(thetas, cell["theta_star"], "inf", alpha, cfg["n"], cfg["m"])
+    world.rng = random.Random(obs_seed_for(sim_idx, cfg["seed_base"]))
 
     def mk_det():
-        return DetectionListener(thetas, PSIS, s1, world, sem, tests=[_test(cfg, c, st, True)],
-                                 alpha=alpha, retro_cache=cfg["retro_cache"])
+        # Same builder as rsa.game.make_listener("switch", ...), so the runner
+        # and the game loop cannot drift apart.
+        return make_switching_listener(thetas, PSIS, s1, world, sem, c=c, switch_type=st,
+                                       alpha=alpha, name=cfg["score"],
+                                       retro_cache=cfg["retro_cache"])
     actual = mk_det()
     replica = mk_det()
     s2 = Speaker2(thetas, replica, sem, world, alpha=alpha, psi=psi_star)
@@ -512,7 +528,11 @@ def write_run_config(cfg, cells, status, wall_seconds, extra=None):
         utterance_index={i: list(u) for i, u in enumerate(sem.utterance_space())},
         obs_index_note="obs = index into world.generate_all_obs(); obs_count = number of effective sessions",
         seed_rule="seed = (seed_base + cell_index * 1000003 + sim_index) mod 2^31; "
-                  "random.seed and np.random.seed are both set to it before each sim",
+                  "random.seed and np.random.seed are both set to it before each sim "
+                  "(speaker utterance sampling)",
+        obs_seed_rule="obs_seed = (seed_base + 7919 * (sim_index + 1)) mod 2^31 seeds the world's "
+                      "private observation RNG: sim i sees the same observation stream in every "
+                      "cell of this run (identical within a theta*, same uniforms across theta*)",
         seed_base=cfg["seed_base"], score=cfg["score"], retro_cache=cfg["retro_cache"],
         workers=cfg["workers"], git_hash=git_hash(), wall_seconds=wall_seconds,
         run_date_utc=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

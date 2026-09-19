@@ -108,7 +108,11 @@ def _identity_residual(s2, listener, world, sem, psi, obs):
     alpha = s2.alpha
     beta = 1.0 if psi == "inf" else 0.0
     dist = s2.dist_over_utterances_obs(obs, psi)
-    inf = {u: listener.infer_obs(u)[obs] for u in sem.utterance_space()}
+    # Inf is the one-step-ahead P(O | u) of the listener that would be active
+    # after u: peek_obs when the listener can switch, infer_obs otherwise.
+    peek_obs = getattr(listener, "peek_obs", None)
+    obs_post = peek_obs if peek_obs is not None else listener.infer_obs
+    inf = {u: obs_post(u)[obs] for u in sem.utterance_space()}
     pers = s2.get_persuasiveness(psi)
     consts = []
     for u, p in dist.items():

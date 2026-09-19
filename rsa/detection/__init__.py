@@ -20,7 +20,7 @@ from .scores import (
     SCORE_FNS,
 )
 from .sequential_test import SequentialTest
-from .listener import DetectionListener, SWITCH_TYPES
+from .listener import DetectionListener, SWITCH_TYPES, make_switching_listener
 from .replay import (
     Trajectory,
     TableSpeaker,
@@ -43,6 +43,7 @@ __all__ = [
     "SequentialTest",
     "DetectionListener",
     "SWITCH_TYPES",
+    "make_switching_listener",
     "Trajectory",
     "TableSpeaker",
     "replay_listener",

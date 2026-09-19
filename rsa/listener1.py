@@ -16,6 +16,11 @@ Two update paths exist and are numerically identical:
   ``{psi: (n_obs, n_utt) array}`` triple and never touches the speaker.  This is
   what makes a retrospective replay possible after the shared speaker object
   has moved on (``DetectionListener`` snapshots the tables every round).
+
+Every cache below is a function of (this belief, the speaker's tables).  The
+caches are cleared on every belief change and are additionally stamped with
+the speaker's ``version``, so they are dropped automatically if the speaker
+moves between two reads (see ``rsa.core`` for the protocol).
 """
 
 import numpy as np
@@ -58,7 +63,21 @@ class Listener1:
         self.suspicion = []
         self.utt_history = []
 
-        # Caches
+        self._version = 0
+        self._dep_version = None
+        self._clear_caches()
+
+    # ------------------------------------------------------------------
+    # Cache/version protocol
+    # ------------------------------------------------------------------
+
+    @property
+    def version(self):
+        """Fingerprint of everything an inference depends on: this belief's
+        own updates and the speaker's version (recursively)."""
+        return (self._version, getattr(self.speaker, "version", None))
+
+    def _clear_caches(self):
         self.obs_psi_utt = {}
         self.obs_psi = None
         self.prior_utt = None
@@ -70,12 +89,24 @@ class Listener1:
         self._obs_psi_utt_array = {}
         self._prior_utt_array = None
 
+    def _sync(self):
+        """Drop every cache if the speaker has moved since it was filled."""
+        v = getattr(self.speaker, "version", None)
+        if v != self._dep_version:
+            self._clear_caches()
+            self._dep_version = v
+
+    def _bump(self):
+        self._version += 1
+        self._clear_caches()
+
     # ------------------------------------------------------------------
     # Live path (reads the speaker's current tables)
     # ------------------------------------------------------------------
 
     def infer_state(self, utt):
         """Posterior P(theta, psi | utt)."""
+        self._sync()
         if utt in self.state_utt:
             return self.state_utt[utt]
         utt_idx = self.semantics.utterance_index(utt)
@@ -93,6 +124,7 @@ class Listener1:
         return posterior
 
     def _distribution_over_obs_psi_array(self):
+        self._sync()
         if self._obs_psi_array is not None:
             return self._obs_psi_array
 
@@ -111,6 +143,7 @@ class Listener1:
 
     def infer_obs(self, utt):
         """P(obs | utt) marginalizing over psi."""
+        self._sync()
         if utt in self.obs_utt:
             return self.obs_utt[utt]
         obs_psi_utt = self._infer_obs_psi_array(utt)
@@ -120,6 +153,7 @@ class Listener1:
         return result
 
     def _infer_obs_psi_array(self, utt):
+        self._sync()
         if utt in self._obs_psi_utt_array:
             return self._obs_psi_utt_array[utt]
 
@@ -142,17 +176,20 @@ class Listener1:
 
     def infer_obs_psi(self, utt):
         """P(obs, psi | utt)."""
+        self._sync()
         if utt not in self.obs_psi_utt:
             self._infer_obs_psi_array(utt)
         return self.obs_psi_utt[utt]
 
     def distribution_over_obs_psi(self):
         """P(obs, psi) marginalizing over theta."""
+        self._sync()
         if self.obs_psi is None:
             self._distribution_over_obs_psi_array()
         return self.obs_psi
 
     def _prior_over_utt_array(self):
+        self._sync()
         if self._prior_utt_array is not None:
             return self._prior_utt_array
 
@@ -168,20 +205,10 @@ class Listener1:
 
     def prior_over_utt(self):
         """P(utt) marginalizing over theta, psi, and observations."""
+        self._sync()
         if self.prior_utt is None:
             self._prior_over_utt_array()
         return self.prior_utt
-
-    def _clear_caches(self):
-        self.obs_psi_utt = {}
-        self.obs_psi = None
-        self.prior_utt = None
-        self.obs_utt = {}
-        self.state_utt = {}
-        self._state_utt_array = {}
-        self._obs_psi_array = None
-        self._obs_psi_utt_array = {}
-        self._prior_utt_array = None
 
     def update(self, utt):
         """Update belief after hearing utterance (live speaker tables)."""
@@ -195,7 +222,7 @@ class Listener1:
         new_belief = self.infer_state(utt)
         self.state_belief = new_belief
         self.hist.append(deepcopy(self.state_belief))
-        self._clear_caches()
+        self._bump()
         return self.state_belief
 
     # ------------------------------------------------------------------
@@ -231,7 +258,7 @@ class Listener1:
         self.utt_history.append(utt)
         self.state_belief = self.infer_state_with_tables(utt, tables_by_psi)
         self.hist.append(deepcopy(self.state_belief))
-        self._clear_caches()
+        self._bump()
         return self.state_belief
 
     def seed_from_theta_marginal(self, theta_probs):
@@ -250,7 +277,7 @@ class Listener1:
             prior = prior / s
         self.state_belief = Belief(self.state_belief.values, prior)
         self.hist = [deepcopy(self.state_belief)]
-        self._clear_caches()
+        self._bump()
         return self.state_belief
 
     # ------------------------------------------------------------------
@@ -286,6 +313,7 @@ class Listener1:
         Suspicion score: probability that the speaker chose a suboptimal utterance
         (i.e., there exist utterances the informative speaker would prefer).
         """
+        self._sync()
         if utt in self.suspicions:
             return self.suspicions[utt]
         suspicion = 0.0

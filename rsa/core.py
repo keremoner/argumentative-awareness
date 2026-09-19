@@ -1,5 +1,21 @@
 """
 Core classes: Belief, Semantics, World.
+
+Cache/version protocol (shared by every agent)
+----------------------------------------------
+Agents cache derived tables that are functions of their own belief *and* of
+the agent one level down (a speaker's tables depend on its internal listener;
+a listener's inferences depend on its speaker model).  A call sequence that
+moves the lower agent without going through the upper one's ``update`` must
+not be able to serve a stale table.  So every agent exposes
+
+    version -> (own_update_counter, dependency.version)
+
+a nested tuple that changes whenever anything the agent's outputs depend on
+changes, and every cache-reading method first calls ``_sync()``, which drops
+the caches if the dependency's version differs from the one they were filled
+under.  Stubs without a ``version`` attribute (``None``) are treated as
+never changing.
 """
 
 import numpy as np
@@ -98,6 +114,10 @@ class World:
         self._obs_index = None
         self._obs_prob_tables = {}
         self._obs_sample_probs = {}
+        # Optional private ``random.Random`` for ``sample_obs``.  Runners set it
+        # so that observation streams are paired across conditions (common
+        # random numbers) while speakers keep drawing from the global RNG.
+        self.rng = None
 
     def obs_prob(self, obs, theta):
         """Return P(obs | theta)."""
@@ -136,4 +156,5 @@ class World:
             probs = probs / probs.sum()
             self._obs_sample_probs[self.theta] = probs
         probs = self._obs_sample_probs[self.theta]
-        return random.choices(all_obs, weights=probs, k=1)[0]
+        rng = random if self.rng is None else self.rng
+        return rng.choices(all_obs, weights=probs, k=1)[0]

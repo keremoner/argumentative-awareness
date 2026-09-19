@@ -63,6 +63,11 @@ class TableSpeaker:
     def psis(self):
         return list(self.tables[0].keys())
 
+    @property
+    def version(self):
+        """The served tables change exactly when ``round_idx`` does."""
+        return (self.round_idx,)
+
     def obs_utt_table_for_psi(self, psi):
         return self.tables[self.round_idx][psi]
 

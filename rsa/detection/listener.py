@@ -32,6 +32,19 @@ Switch types
 were when each utterance arrived.  The listener itself no longer needs them
 (every sub-listener is updated live), but the offline runners derive
 switching trajectories from stored streams and read them from here.
+
+One-step peeks
+--------------
+``peek(u)`` and ``peek_obs(u)`` return, without mutating anything, the
+theta-marginal and the posterior over observations that the listener would
+hold after hearing ``u`` -- detector update and any switch that ``u`` would
+trigger included.  They are the two quantities an ``S2`` needs for its
+persuasiveness and informativeness terms, so an S2 modelling this listener
+scores both against the same hypothetical listener.
+
+``version`` follows the protocol in ``rsa.core``: it moves on every
+``update`` and folds in the speaker's version, so an S2 caching this
+listener's answers drops them automatically when either changes.
 """
 
 from __future__ import annotations
@@ -40,7 +53,8 @@ from copy import deepcopy
 import numpy as np
 
 from ..listener1 import Listener1
-from .scores import ScoreContext
+from .scores import ScoreContext, SUS_VARIANT_FNS
+from .sequential_test import SequentialTest
 
 
 SWITCH_TYPES = ("hard", "soft")
@@ -93,6 +107,7 @@ class DetectionListener:
         self.switch_driver = None  # which test triggered the switch
         self.switch_type = None
         self.round = 0
+        self._version = 0
 
         self.utt_history = []
         self.table_history = []    # per round: {psi: (n_obs, n_utt) array}
@@ -107,6 +122,11 @@ class DetectionListener:
     def active(self):
         """The sub-listener currently holding the belief."""
         return self.vigilant if self.switched else self.naive
+
+    @property
+    def version(self):
+        """State fingerprint: own round counter plus the speaker's version."""
+        return (self._version, getattr(self.speaker, "version", None))
 
     @property
     def state_belief(self):
@@ -163,6 +183,7 @@ class DetectionListener:
     def update(self, utt):
         """Process one utterance: run tests, maybe switch, then update beliefs."""
         self.round += 1
+        self._version += 1
         t = self.round
 
         # Snapshot the tables that generate/explain u_t *before* anything
@@ -248,13 +269,52 @@ class DetectionListener:
         if driver is None:
             return self.naive.infer_state(utt).marginal(0)
 
-        switch_type = driver.switch_type
+        return self._would_be_active(driver.switch_type).infer_state(utt).marginal(0)
+
+    def peek_obs(self, utt):
+        """Posterior over observations P(O | utt) of the listener that would be
+        active after hearing ``utt`` -- the credulous one, or the vigilant one
+        ``utt`` would switch to -- without mutating anything.
+
+        Returns a dict O -> probability (same layout as ``infer_obs``).
+        """
+        if self.switched:
+            return self.vigilant.infer_obs(utt)
+        driver = self._would_switch(utt)
+        if driver is None:
+            return self.naive.infer_obs(utt)
+        return self._would_be_active(driver.switch_type).infer_obs(utt)
+
+    def _would_be_active(self, switch_type):
+        """The vigilant L1 (with its pre-``u`` prior) that a switch of
+        ``switch_type`` would install this round.  Read-only for the shadow;
+        the soft seed lives in a scratch listener that is reseeded every call.
+        Both read the speaker's live tables, which equal the snapshot ``update``
+        would take this round."""
         if switch_type == "hard":
-            return self.shadow.infer_state(utt).marginal(0)
+            return self.shadow
         if switch_type == "soft":
             if self._soft_scratch is None:
                 self._soft_scratch = self._fresh_vigilant()
-            scratch = self._soft_scratch
-            scratch.seed_from_theta_marginal(self.naive.marginal_theta())
-            return scratch.infer_state_with_tables(utt, self._live_tables()).marginal(0)
+            self._soft_scratch.seed_from_theta_marginal(self.naive.marginal_theta())
+            return self._soft_scratch
         raise ValueError(f"unknown switch_type {switch_type!r}; expected one of {SWITCH_TYPES}")
+
+
+# ---------------------------------------------------------------------------
+# Builder shared by the game loop and the experiment runners
+# ---------------------------------------------------------------------------
+
+def make_switching_listener(thetas, psis, speaker, world, semantics, c, switch_type,
+                            alpha=1.0, score_fn=None, name="sus_1", retro_cache=False):
+    """A ``DetectionListener`` with one switch-enabled ``SequentialTest``.
+
+    ``score_fn`` defaults to the live ``sus_1`` score; ``c`` is the z-score
+    boundary (``inf`` never fires); ``switch_type`` is ``"hard"`` or ``"soft"``.
+    """
+    if switch_type not in SWITCH_TYPES:
+        raise ValueError(f"unknown switch_type {switch_type!r}; expected one of {SWITCH_TYPES}")
+    test = SequentialTest(SUS_VARIANT_FNS["1"] if score_fn is None else score_fn, name,
+                          c=c, switch_enabled=True, switch_type=switch_type)
+    return DetectionListener(thetas, psis, speaker, world, semantics, tests=[test],
+                             alpha=alpha, retro_cache=retro_cache)

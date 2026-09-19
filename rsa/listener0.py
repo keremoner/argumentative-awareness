@@ -4,6 +4,9 @@ Literal Listener L0.
 Updates belief over theta by reasoning about a literal speaker S0.
 P(theta | u) proportional to P(u | theta) * P(theta)
 where P(u | theta) = sum_O P_S0(u | O) * P(O | theta).
+
+Caches are keyed on the speaker's ``version`` and dropped automatically when
+the speaker moves, so a stale result can never be served (see ``rsa.core``).
 """
 
 from copy import deepcopy
@@ -18,12 +21,34 @@ class Listener0:
         self.world = world
         self.semantics = semantics
         self.hist = [deepcopy(self.state_belief)]
+        self._version = 0
+        self._dep_version = None
+        self._clear_caches()
+
+    # ------------------------------------------------------------------
+    # Cache/version protocol
+    # ------------------------------------------------------------------
+
+    @property
+    def version(self):
+        return (self._version, getattr(self.speaker, "version", None))
+
+    def _clear_caches(self):
         self.prior_utt = None
         self.obs_utt = {}
         self.state_utt = {}
 
+    def _sync(self):
+        v = getattr(self.speaker, "version", None)
+        if v != self._dep_version:
+            self._clear_caches()
+            self._dep_version = v
+
+    # ------------------------------------------------------------------
+
     def infer_state(self, utt):
         """Posterior P(theta | utt)."""
+        self._sync()
         if utt in self.state_utt:
             return self.state_utt[utt]
         likelihoods = np.array(
@@ -37,6 +62,7 @@ class Listener0:
 
     def infer_obs(self, utt):
         """P(obs | utt) for all observations."""
+        self._sync()
         if utt in self.obs_utt:
             return self.obs_utt[utt]
         result = {}
@@ -54,6 +80,7 @@ class Listener0:
 
     def prior_over_utt(self):
         """P(utt) marginalizing over theta and observations."""
+        self._sync()
         if self.prior_utt is not None:
             return self.prior_utt
         theta_probs = self.state_belief.prob
@@ -70,8 +97,7 @@ class Listener0:
         """Update belief after hearing utterance."""
         new_belief = self.infer_state(utt)
         self.state_belief = new_belief
-        self.prior_utt = None
-        self.obs_utt = {}
-        self.state_utt = {}
+        self._version += 1
+        self._clear_caches()
         self.hist.append(deepcopy(self.state_belief))
         return self.state_belief.as_dict()

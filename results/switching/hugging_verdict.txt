@@ -1,2 +1,0 @@
-mean first-crossing rate difference (B - C1) over 120 matched persuasive cells: -0.0025 +/- 0.0068 (95% CI over cells)
-no detectable difference in crossing rate: the boundary-hugging seen in B's Sus(t) figure is survivorship, not avoidance.

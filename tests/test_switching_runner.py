@@ -99,7 +99,8 @@ def test_offline_seeds_reproducible(tmp_path):
     assert R.seed_for(0, 0, 7) != R.seed_for(1, 0, 7) != R.seed_for(0, 1, 7)
 
 
-@pytest.mark.parametrize("speaker_level,listener_level", [("S2_vig", "L1"), ("S2_cred", "L2")])
+@pytest.mark.parametrize("speaker_level,listener_level",
+                         [("S2_vig", "L1"), ("S2_cred", "L1"), ("S2_cred", "L2")])
 def test_offline_s2_variants_run(tmp_path, speaker_level, listener_level):
     cfg = _cfg(tmp_path, speaker_level=speaker_level, listener_level=listener_level, n_sims=2, rounds=12,
                switch_types=["hard", "soft"])
@@ -146,6 +147,42 @@ def test_config_validation(tmp_path):
     with pytest.raises(ValueError):
         _cfg(tmp_path, mode="feedback", speaker_level="S1")
     with pytest.raises(ValueError):
-        _cfg(tmp_path, speaker_level="S2_cred", listener_level="L1")
+        _cfg(tmp_path, speaker_level="S1", listener_level="L2")     # L2 detector needs the S2_cred speaker
+    with pytest.raises(ValueError):
+        _cfg(tmp_path, listener_level="L3")
     with pytest.raises(ValueError):
         _cfg(tmp_path, mode="bogus")
+    _cfg(tmp_path, speaker_level="S2_cred", listener_level="L1")   # Fang's cooperative dyad: allowed
+
+
+def test_observation_streams_are_paired_across_cells(tmp_path):
+    # Common random numbers: sim i draws the same observations in every cell
+    # with the same theta* (offline and feedback alike), and the same uniforms
+    # -- hence a monotone-related but different stream -- across theta*.
+    cfg = _cfg(tmp_path, theta_stars=[0.3, 0.7], psi_stars=["inf", "high"], alphas=[3.0],
+               cs=[2.0], switch_types=["hard"], n_sims=3, rounds=25)
+    cells = R.build_cells(cfg)
+    frames = {}
+    for cell in cells:
+        R.run_cell((cfg, cell))
+        df = pd.read_parquet(R._shard_path(cfg["out_dir"], cell["cell_id"]))
+        frames[(cell["theta_star"], cell["psi_star"])] = df.sort_values(["sim", "round"])
+    for th in (0.3, 0.7):
+        a, b = frames[(th, "inf")], frames[(th, "high")]
+        np.testing.assert_array_equal(a["obs"].values, b["obs"].values)   # same obs, different psi
+        assert not np.array_equal(a["utt"].values, b["utt"].values)       # different speaker
+    assert not np.array_equal(frames[(0.3, "inf")]["obs"].values, frames[(0.7, "inf")]["obs"].values)
+
+    (tmp_path / "fb").mkdir()
+    fcfg = _cfg(tmp_path / "fb", mode="feedback", speaker_level="S2_replica", theta_stars=[0.3],
+                psi_stars=["inf", "high"], alphas=[3.0], cs=[2.0], switch_types=["hard", "soft"],
+                n_sims=3, rounds=25)
+    obs_by_cell = []
+    for cell in R.build_cells(fcfg):
+        R.run_cell((fcfg, cell))
+        df = pd.read_parquet(R._shard_path(fcfg["out_dir"], cell["cell_id"])).sort_values(["sim", "round"])
+        obs_by_cell.append(df["obs"].values)
+    for o in obs_by_cell[1:]:
+        np.testing.assert_array_equal(obs_by_cell[0], o)
+    # and the feedback stream of sim i equals the offline stream of sim i at the same theta*
+    np.testing.assert_array_equal(obs_by_cell[0], frames[(0.3, "inf")]["obs"].values)
