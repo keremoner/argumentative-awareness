@@ -1,0 +1,80 @@
+{
+ "sweep_dir": "results\\full_sweep_v2",
+ "git_hash": "6cf7339a98a90abecf08d7fc308c66407ec5a74d",
+ "theta_space": [
+  0.0,
+  0.1,
+  0.2,
+  0.3,
+  0.4,
+  0.5,
+  0.6,
+  0.7,
+  0.8,
+  0.9,
+  1.0
+ ],
+ "scores": [
+  "surp2",
+  "sus1"
+ ],
+ "c_list": [
+  2.0,
+  2.5,
+  3.0,
+  3.5,
+  4.0,
+  5.0
+ ],
+ "horizons": [
+  25,
+  50,
+  100,
+  150
+ ],
+ "psi_map": {
+  "inf": "inf",
+  "pers+": "high",
+  "pers-": "low"
+ },
+ "n_shards": 297,
+ "n_rows_runs": 59400,
+ "grid": {
+  "theta_stars": [
+   0.1,
+   0.2,
+   0.3,
+   0.4,
+   0.5,
+   0.6,
+   0.7,
+   0.8,
+   0.9
+  ],
+  "psi_trues": [
+   "inf",
+   "pers+",
+   "pers-"
+  ],
+  "alphas": [
+   1.0,
+   1.5,
+   2.0,
+   2.5,
+   3.0,
+   4.0,
+   5.0,
+   7.0,
+   10.0,
+   15.0,
+   20.0
+  ],
+  "n": 1,
+  "m": 7,
+  "speaker_level": "S1",
+  "rounds": 150,
+  "n_sims_per_cell": 200,
+  "n_cells": 297
+ },
+ "built_utc": "2026-09-18T10:27:03Z"
+}

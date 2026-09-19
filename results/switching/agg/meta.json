@@ -1,0 +1,237 @@
+{
+ "studies": {
+  "A": {
+   "mode": "offline",
+   "speaker_level": "S1",
+   "listener_level": "L1",
+   "n_cells": 216,
+   "n_sims": 100,
+   "rounds": 150,
+   "git_hash": "99c252329c94e0f81f6e6a85b2ac0138656352b3",
+   "theta_grid": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+   ],
+   "utterance_index": {
+    "0": [
+     "none",
+     "effective"
+    ],
+    "1": [
+     "none",
+     "ineffective"
+    ],
+    "2": [
+     "some",
+     "effective"
+    ],
+    "3": [
+     "some",
+     "ineffective"
+    ],
+    "4": [
+     "most",
+     "effective"
+    ],
+    "5": [
+     "most",
+     "ineffective"
+    ],
+    "6": [
+     "all",
+     "effective"
+    ],
+    "7": [
+     "all",
+     "ineffective"
+    ]
+   }
+  },
+  "B": {
+   "mode": "feedback",
+   "speaker_level": "S2_replica",
+   "listener_level": "L1",
+   "n_cells": 2160,
+   "n_sims": 100,
+   "rounds": 150,
+   "git_hash": "99c252329c94e0f81f6e6a85b2ac0138656352b3",
+   "theta_grid": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+   ],
+   "utterance_index": {
+    "0": [
+     "none",
+     "effective"
+    ],
+    "1": [
+     "none",
+     "ineffective"
+    ],
+    "2": [
+     "some",
+     "effective"
+    ],
+    "3": [
+     "some",
+     "ineffective"
+    ],
+    "4": [
+     "most",
+     "effective"
+    ],
+    "5": [
+     "most",
+     "ineffective"
+    ],
+    "6": [
+     "all",
+     "effective"
+    ],
+    "7": [
+     "all",
+     "ineffective"
+    ]
+   }
+  },
+  "Fvig": {
+   "mode": "offline",
+   "speaker_level": "S2_vig",
+   "listener_level": "L1",
+   "n_cells": 216,
+   "n_sims": 100,
+   "rounds": 150,
+   "git_hash": "99c252329c94e0f81f6e6a85b2ac0138656352b3",
+   "theta_grid": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+   ],
+   "utterance_index": {
+    "0": [
+     "none",
+     "effective"
+    ],
+    "1": [
+     "none",
+     "ineffective"
+    ],
+    "2": [
+     "some",
+     "effective"
+    ],
+    "3": [
+     "some",
+     "ineffective"
+    ],
+    "4": [
+     "most",
+     "effective"
+    ],
+    "5": [
+     "most",
+     "ineffective"
+    ],
+    "6": [
+     "all",
+     "effective"
+    ],
+    "7": [
+     "all",
+     "ineffective"
+    ]
+   }
+  },
+  "Fcred": {
+   "mode": "offline",
+   "speaker_level": "S2_cred",
+   "listener_level": "L1",
+   "n_cells": 216,
+   "n_sims": 100,
+   "rounds": 150,
+   "git_hash": "99c252329c94e0f81f6e6a85b2ac0138656352b3",
+   "theta_grid": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+   ],
+   "utterance_index": {
+    "0": [
+     "none",
+     "effective"
+    ],
+    "1": [
+     "none",
+     "ineffective"
+    ],
+    "2": [
+     "some",
+     "effective"
+    ],
+    "3": [
+     "some",
+     "ineffective"
+    ],
+    "4": [
+     "most",
+     "effective"
+    ],
+    "5": [
+     "most",
+     "ineffective"
+    ],
+    "6": [
+     "all",
+     "effective"
+    ],
+    "7": [
+     "all",
+     "ineffective"
+    ]
+   }
+  }
+ },
+ "built_utc": "2026-09-18T09:40:02Z",
+ "k_window": [
+  -30,
+  60
+ ],
+ "margin_bins": [
+  -Infinity,
+  -2.0,
+  -1.0,
+  -0.5,
+  -0.25,
+  -0.1,
+  -0.05,
+  -0.02,
+  -0.01,
+  0.0
+ ]
+}
