@@ -1,6 +1,7 @@
 // Report for Michael Franke.  Build:
 //   typst compile --root . docs/report.typ build/typst/report.pdf
-// Figures:  .conda/python.exe experiments/report_figures.py
+// Figures and tables for the simulation section: notebooks/analysis.ipynb
+//   -> results/report/figures, results/report/tables
 
 #set page(paper: "a4", margin: (x: 2.3cm, y: 2.4cm), numbering: "1")
 #set text(size: 10.5pt, lang: "en")
@@ -24,10 +25,12 @@
 #show table.cell.where(y: 0): set text(weight: "semibold")
 #show link: set text(fill: rgb("#1c5cab"))
 
-#let fig(name, cap, width: 100%) = figure(
+// Figures stay in reading order (no floating): the simulation section has
+// many full-width panels, and letting them float pushes them past the text.
+#let fig(name, cap, width: 85%) = figure(
   image("/results/report/figures/" + name, width: width),
   caption: cap,
-  placement: auto,
+  placement: none,
 )
 #let inf = $"inf"$
 #let pp = $"pers"^+$
@@ -62,7 +65,7 @@ Much of what people know about the world is acquired through testimony, and
 the sources of that testimony frequently have an interest in what the
 recipient comes to believe. A reader who learns about a clinical trial from a
 company's press releases, or about a policy from the statements of its
-advocates, is seldom informed in advance whether the source is impartial. If
+advocates, is rarely informed in advance whether the source is impartial. If
 the reader comes to doubt the source, the doubt is typically prompted by the
 communicative behaviour itself: a description that is less specific than the
 evidence permitted, or a pattern of emphasis that consistently favours one
@@ -405,11 +408,11 @@ about the observation.
 == Suspicion score and sequential test <seqtest>
 
 Let $s^((t))$ denote either score at round $t$ and $sigma^(2,(t))$ its
-variance. After $T$ rounds the listener holds the running mean of the scores,
+variance. After $t$ rounds the listener holds the running mean of the scores,
 the _suspicion score_, together with the running mean of the variances,
 $
-  sus^((T)) = 1/T sum_(t = 1)^T s^((t)), quad quad
-  macron(sigma)^(2,(T)) = 1/T sum_(t = 1)^T sigma^(2,(t)),
+  sus^((t)) = 1/t sum_(i = 1)^t s^((i)), quad quad
+  macron(sigma)^(2,(t)) = 1/t sum_(i = 1)^t sigma^(2,(i)),
 $ <sus>
 and raises an alarm the first time the suspicion score exceeds a
 $z$-scaled boundary,
@@ -428,8 +431,9 @@ does: a persuasive utterance remains a poor description of the observations
 that would explain it, whatever belief about $theta$ the listener has settled
 on. For $surp(1)$ it need not: the credulous listener's belief adapts to the
 persuasive utterances, and once it has, those utterances are no longer rare
-under its prior predictive, which is all $surp(1)$ measures. $surp(1)$ then
-detects, if at all, from the early rounds only (@sweep). Both scores at
+under its prior predictive, which is all $surp(1)$ measures. Whether
+$surp(1)$ still detects then depends on where the credulous belief settles,
+and it need not detect at all (@sweep). Both scores at
 round $t$ are computed from the belief $P_(Lc)^((t))$ that the listener
 carries into the round, which was formed from $u^((1)), dots, u^((t - 1))$;
 the round's own utterance enters only as the argument being scored. The
@@ -443,7 +447,7 @@ and the two coincide only once that belief has concentrated on
 $theta^star$. Under an informative $S_1$ the listener's model of the speaker
 is correct, and we expect exactly this concentration: the credulous
 listener's estimate of $theta$ converges to the true rate as the rounds
-accumulate (@fang2026, Fig. 1B; @f-acc below). Hence, at a fixed
+accumulate (@fang2026, Fig. 1B). Hence, at a fixed
 $theta^star$, the scores carry a bias in the early rounds, while the belief
 is still diffuse, and are mean-zero in the limit; the running mean
 $sus^((T))$ inherits that early bias and averages it away. Whether the bias
@@ -478,193 +482,305 @@ were run.
 // ============================================================= 4 ==========
 = Simulations I: scoring an $S_1$ speaker <sweep>
 
-The first set of simulations isolates the two scores. An $S_1$ speaker with
-true goal $psi^star$ and rationality $alpha$ talks for 150 rounds to a
-credulous $Lc$ that computes both scores every round but never switches, so
-that the test of @test can be evaluated offline for any boundary $c$ on the
-same runs. The grid is $theta^star in {0.1, dots, 0.9}$,
+This section reports the simulation sweep that isolates the two scores. Every
+figure and table in it is produced by `notebooks/analysis.ipynb` from the
+stored runs of the sweep; nothing is re-simulated there.
+
+== The sweep
+
+*Design.* An $S_1$ speaker with true goal $psi^star$ and rationality $alpha$
+talks for 150 rounds to a credulous $Lc$ that computes $surp(1)$ and
+$surp(2)$, their null variances, and the two running means of @sus every
+round, but never switches. The grid is $theta^star in {0.1, 0.2, dots, 0.9}$,
 $psi^star in {inf, pp, pm}$ and
-$alpha in {1, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20}$, with 200 simulations per
-cell (297 cells, 59,400 runs). The listener's $theta$ grid has eleven points,
-${0, 0.1, dots, 1}$, and the listener is given the speaker's $alpha$. Rates
-pooled over the grid exclude $alpha = 1$, where the pragmatic speaker is
-nearly literal and the three goals are hard to tell apart by any means.
+$alpha in {1, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20}$, with 200 independent
+simulations per cell: 297 cells, 59,400 runs and 8.91 million
+listener-rounds in all. The world is that of @setting, the listener's
+$theta$ grid has eleven points ${0, 0.1, dots, 1}$, and the listener is given
+the speaker's $alpha$.
 
-== The null is calibrated
+*What is recorded and how the test is scored.* Every round stores the
+utterance heard, both per-round scores $s^((t))$ with their null variances
+$sigma^(2,(t))$, the running means $sus^((t))$ and $macron(sigma)^(2,(t))$,
+and the listener's belief over $theta$. Because the listener never switches,
+the test of @test can be evaluated offline on the saved runs for any
+boundary $c$: a run is _detected_ at $c$ if
+$sus^((t)) > c thin macron(sigma)^((t)) \/ sqrt(t)$ for some $t <= 150$, and
+$tau$ is the first such $t$. Crossing times recomputed this way from the
+stored running means reproduce the crossing times written during the sweep
+exactly, for both scores and every $c in {2, 2.5, 3, 3.5, 4, 5}$.
 
-@f-null checks the two claims that the sequential test rests on: that under
-an informative speaker the suspicion score converges to zero, and that its
-variance is $macron(sigma)^(2,(T)) \/ T$. Both hold for both scores at every
-$alpha$. Pooled over all null runs, the ratio of the empirical per-round
-variance to the analytic variance is 1.00 for both scores, and the mean
-suspicion score at round 150 is $-0.0007$ ($surp(1)$) and $0.0000$
-($surp(2)$). The early negative excursion of $surp(1)$ reflects the
-listener's initially diffuse prior predictive, under which the first
-utterances are less surprising than the entropy term expects; $surp(2)$ does
-not show it because its centring is per observation.
+*Conventions.* $alpha = 3$ and $c = 3.5$ are the reference settings wherever
+a single value is shown. Rates pooled over the grid exclude $alpha = 1$,
+where the pragmatic speaker is nearly literal and the three goals are hard to
+tell apart by any means. _Power_ is the fraction of persuasive runs detected
+by round 150 and the _false-alarm rate_ the fraction of informative runs
+detected by round 150. Bands in the figures are $plus.minus 1$ standard
+error of a mean over the 200 runs of a cell unless the caption says
+otherwise.
 
-#fig("S1_null_calibration.png")[
-  *Null behaviour under an informative $S_1$*, pooled over $theta^star$, one
-  line per $alpha$ (light to dark). Left: mean suspicion score $sus^((T))$
-  against round $T$; the null prediction is 0. Right: variance of $sus^((T))$
-  across runs divided by the analytic $macron(sigma)^(2,(T)) \/ T$; the null
-  prediction is 1. Top row $surp(1)$, bottom row $surp(2)$.
-] <f-null>
+== The suspicion score
 
-== Separation and operating characteristics
+#fig("S17_runmean_inf.png")[
+  *Suspicion score under an informative $S_1$*, $alpha = 3$. Mean of
+  $sus^((t))$ over 200 runs against round $t$, one panel per $theta^star$,
+  for $surp(1)$ (pink) and $surp(2)$ (blue), with $plus.minus 1$ SE bands.
+  Dashed: the boundary $c thin macron(sigma)^((t)) \/ sqrt(t)$ at $c = 1$,
+  averaged over runs, for scale.
+] <f-null-mean>
 
-@f-sep shows the distribution of the suspicion score at the horizon,
-$sus^((150))$, under each speaker goal at $alpha = 3$. Both scores separate
-persuasive from informative speakers, but differently. Under $surp(1)$ the
-persuasive distributions are bimodal, with a substantial mode overlapping the
-null; under $surp(2)$ the null is tighter and the persuasive mass lies
-almost entirely to its right. The median over $(theta^star, alpha)$ cells of
-the standardised separation
-$d' = (EE[sus^((150)) | "persuasive"] - EE[sus^((150)) | inf]) \/ op("sd")(sus^((150)) | inf)$
-is 6.2 for $surp(1)$ and 9.3 for $surp(2)$. The two persuasive goals are
-indistinguishable in every figure of this section, as expected from the
-symmetry of the utterance space.
+#fig("S18_runmean_pers_up.png")[
+  *Suspicion score under a persuade-up $S_1$*, $alpha = 3$; layout as in
+  @f-null-mean.
+] <f-pers-mean>
 
-#fig("S2_separation.png")[
-  *Suspicion score at the horizon.* Density of $sus^((150))$ at $alpha = 3$,
-  pooled over $theta^star$, under an informative, a persuade-up and a
-  persuade-down $S_1$.
-] <f-sep>
+== The variance
 
-@t-rates and @f-roc give the operating characteristics of the test of @test.
-At a matched false-alarm rate, $surp(2)$ detects a persuasive $S_1$ far more
-often than $surp(1)$: at $c = 3.5$, where both scores raise a false alarm in
-about 3% of informative runs, $surp(2)$ detects 95% of persuasive runs and
-$surp(1)$ 64%. The ROC curves of $surp(2)$ lie near the top-left corner for
-every $alpha >= 1.5$, whereas those of $surp(1)$ fan out with $alpha$.
+#fig("S9_variance_ratio_inf.png")[
+  *Null calibration of the variance*, informative $S_1$, $alpha = 3$.
+  $op("Var")[sus^((t))]$ across the 200 runs of each $theta^star$ divided by
+  the analytic $macron(sigma)^(2,(t)) \/ t$; the prediction is the dashed
+  line at 1.
+] <f-null-var>
+
+#fig("S9_variance_levels_scaled_inf.png", width: 78%)[
+  *Empirical against analytic variance*, informative $S_1$, $alpha = 3$,
+  both multiplied by $t$. Solid: $t thin op("Var")[sus^((t))]$ across runs
+  with its two-sided 95% $chi^2$ interval (shaded). Dashed: the analytic
+  $macron(sigma)^(2,(t))$. Top block $surp(1)$, bottom block $surp(2)$;
+  each panel has its own vertical axis.
+] <f-null-var-levels>
+
+#fig("S9_variance_ratio_pers_up.png")[
+  *Variance against the analytic prediction under a persuade-up $S_1$*,
+  $alpha = 3$; layout as in @f-null-var. The persuade-down figure is the
+  same, mirrored in $theta^star$.
+] <f-pers-var>
+
+== False alarms against the horizon
+
+#fig("S13_false_alarm_vs_T.png")[
+  *False-alarm rate against the horizon*, informative $S_1$. Top: fraction
+  of runs that have crossed by round $t$, one line per $c$ (light to dark),
+  pooled over $theta^star$ and $alpha >= 1.5$; dotted lines are the
+  fixed-sample levels $Phi(-c)$. Bottom: the same at $c = 3.5$, one line per
+  $theta^star$, pooled over $alpha >= 1.5$.
+] <f-fa>
+
+== Absorption of $surp(1)$
+
+#fig("S8_surp1_absorption.png")[
+  *Absorption of $surp(1)$ under a persuade-up $S_1$*, $alpha = 3$. Tall
+  panels: realised surprisal $-log P_(Lc)^((t))(u^((t)))$ (pink) and entropy
+  $H(P_(Lc)^((t)))$ (grey) of the credulous listener's prior predictive,
+  rebuilt from the stored beliefs; the shaded gap is $surp(1)^((t))$. Short
+  panels: the credulous posterior mean $EE[theta]$ against $theta^star$
+  (dotted). Mean $plus.minus 1$ SE over 200 runs.
+] <f-absorb>
+
+== Operating characteristics
 
 #figure(
   table(
-    columns: (auto, auto, auto, auto, auto, auto),
-    align: (left, center, center, center, center, center),
-    [score], [$c$], [false alarm], [power, $pp$], [power, $pm$], [median $tau$],
-    [$surp(1)$], [2.0], [0.234], [0.743], [0.740], [3],
-    [$surp(1)$], [3.0], [0.069], [0.667], [0.669], [4],
-    [$surp(1)$], [3.5], [0.034], [0.635], [0.636], [5],
-    [$surp(1)$], [5.0], [0.005], [0.556], [0.559], [6],
-    [$surp(2)$], [2.0], [0.219], [0.996], [0.995], [2],
-    [$surp(2)$], [3.0], [0.065], [0.974], [0.970], [4],
-    [$surp(2)$], [3.5], [0.031], [0.947], [0.947], [5],
-    [$surp(2)$], [5.0], [0.011], [0.830], [0.826], [7],
+    columns: 8,
+    align: (left, center, center, center, center, center, center, center),
+    [score], [$c$], [false alarm], [power, $pp$], [power, $pm$],
+    [median $tau$], [$tau$ quartiles], [by round 10],
+    [$surp(1)$], [2.0], [0.234], [0.743], [0.740], [3], [1, 11], [0.75],
+    [$surp(1)$], [2.5], [0.121], [0.699], [0.700], [4], [1, 14], [0.71],
+    [$surp(1)$], [3.0], [0.069], [0.667], [0.669], [4], [1, 17], [0.67],
+    [$surp(1)$], [3.5], [0.034], [0.635], [0.636], [5], [2, 21], [0.64],
+    [$surp(1)$], [4.0], [0.019], [0.606], [0.608], [5], [1, 23], [0.62],
+    [$surp(1)$], [5.0], [0.005], [0.556], [0.559], [6], [1, 28], [0.58],
+    [$surp(2)$], [2.0], [0.219], [0.996], [0.995], [2], [1, 7], [0.80],
+    [$surp(2)$], [2.5], [0.128], [0.989], [0.988], [3], [1, 12], [0.73],
+    [$surp(2)$], [3.0], [0.065], [0.974], [0.970], [4], [1, 20], [0.66],
+    [$surp(2)$], [3.5], [0.031], [0.947], [0.947], [5], [2, 27], [0.61],
+    [$surp(2)$], [4.0], [0.019], [0.911], [0.911], [6], [2, 34], [0.58],
+    [$surp(2)$], [5.0], [0.011], [0.830], [0.826], [7], [1, 43], [0.55],
   ),
-  caption: [*Operating characteristics of the sequential test by round 150*,
-    pooled over $theta^star$ and $alpha >= 1.5$. False alarm is the crossing
-    rate under an informative $S_1$, power the crossing rate under each
-    persuasive goal, and median $tau$ is taken over detected persuasive
-    runs.],
+  caption: [*Operating characteristics of the sequential test by round
+    150*, pooled over $theta^star$ and $alpha >= 1.5$. False alarm is the
+    crossing rate under an informative $S_1$ and power the crossing rate
+    under each persuasive goal. Median, quartiles and the fraction crossing
+    by round 10 are taken over detected persuasive runs.],
 ) <t-rates>
 
-#fig("S3_roc.png")[
-  *Operating characteristics by round 150.* False-alarm rate against power,
-  one curve per $alpha$ (light to dark), traced through
-  $c in {2, 2.5, 3, 3.5, 4, 5}$ from right to left. Dotted line is chance.
-] <f-roc>
+#figure(
+  table(
+    columns: 9,
+    align: (left, center, center, center, center, center, center, center, center),
+    table.header(
+      table.cell(rowspan: 2)[$theta^star$],
+      table.cell(colspan: 2, align: center)[false alarm],
+      table.cell(colspan: 2, align: center)[power],
+      table.cell(colspan: 2, align: center)[median $tau$],
+      table.cell(colspan: 2, align: center)[$sus^((150))$, persuasive],
+      [$surp(1)$], [$surp(2)$], [$surp(1)$], [$surp(2)$],
+      [$surp(1)$], [$surp(2)$], [$surp(1)$], [$surp(2)$],
+    ),
+    [0.1], [0.015], [0.010], [0.85], [1.00], [51], [18.5], [0.35], [0.46],
+    [0.2], [0.030], [0.015], [0.14], [0.90], [13], [18.5], [$-0.04$], [0.11],
+    [0.3], [0.020], [0.005], [0.19], [0.80], [22], [10], [$-0.04$], [0.13],
+    [0.4], [0.015], [0.015], [0.50], [0.99], [37], [16], [0.20], [0.40],
+    [0.5], [0.030], [0.015], [0.94], [1.00], [49], [13.5], [0.46], [0.73],
+    [0.6], [0.035], [0.000], [0.49], [0.99], [36], [15], [0.19], [0.39],
+    [0.7], [0.035], [0.010], [0.18], [0.79], [20], [10], [$-0.05$], [0.12],
+    [0.8], [0.015], [0.015], [0.13], [0.88], [12], [19.5], [$-0.04$], [0.11],
+    [0.9], [0.035], [0.020], [0.86], [1.00], [46], [17], [0.36], [0.47],
+  ),
+  caption: [*The reference setting by $theta^star$*, $c = 3.5$,
+    $alpha = 3$. Power and the mean of $sus^((150))$ are over both persuasive
+    goals (400 runs); median $tau$ is over detected persuasive runs; the
+    false-alarm rate is over 200 informative runs.],
+) <t-theta>
 
-== Dependence on speaker rationality
+== Detection time
 
-@f-alpha separates the two rates as functions of $alpha$. The false-alarm
-rate is flat in $alpha$ for both scores at every boundary, which is the
-signature of a correctly calibrated null: how deterministic the informative
-speaker is does not make it look persuasive. Power depends strongly on
-$alpha$ for $surp(1)$, rising from near zero at $alpha = 1.5$ to one at
-$alpha = 10$, and only weakly for $surp(2)$, which already detects most
-persuasive speakers at $alpha = 1.5$. A persuasive speaker with low $alpha$
-chooses nearly uniformly among true utterances; what distinguishes it from an
-informative speaker of the same $alpha$ is not that its utterances are
-globally rare, which $surp(1)$ measures, but that they are the wrong
-utterances for the observations they are true of, which $surp(2)$ measures.
+#fig("S10_tau_violins_pers_up.png")[
+  *Crossing round $tau$ under a persuade-up $S_1$*, $c = 3.5$, over
+  detected runs. Left: against $alpha$, pooled over $theta^star$. Right:
+  against $theta^star$ at $alpha = 3$. Violin width is proportional to the
+  power printed above it; the tick is the median.
+] <f-tau-up>
 
-#fig("S4_rates_vs_alpha.png")[
-  *Rates against speaker rationality.* False-alarm rate (solid) and power
-  (dashed) by round 150, pooled over $theta^star$, for three boundaries $c$.
-] <f-alpha>
+#fig("S10_tau_violins_pers_down.png")[
+  *Crossing round $tau$ under a persuade-down $S_1$*; layout as in
+  @f-tau-up.
+] <f-tau-down>
 
-@f-lat shows when detection happens. At $alpha = 3$ and $c = 3.5$ the
-cumulative crossing curves of $surp(2)$ under the persuasive speakers rise
-from the first few rounds, and the median detection time falls from 40
-rounds at $alpha = 2$ to a single round at $alpha >= 7$; $surp(1)$ is slower
-at every $alpha$ where it detects at all. @f-grid resolves the same rates by
-$theta^star$. Detection is hardest, for both scores, at intermediate
-$theta^star$ and low $alpha$: when the true rate is near $0.5$ the
-informative and the persuasive speakers agree on "most" or "some" for many
-observations, and the persuasive one has little room to frame.
+#fig("S11_tau_histogram.png")[
+  *When detection happens*, $alpha = 3$, $c = 3.5$, both persuasive goals
+  and all $theta^star$ (3,600 runs per score). Fraction of runs whose $tau$
+  falls in each 10-round bin; the hatched bar is the fraction never
+  detected.
+] <f-tau-hist>
 
-#fig("S5_latency.png")[
-  *Detection time.* Left: fraction of runs whose suspicion score has crossed
-  the boundary by round $T$, at $alpha = 3$ and $c = 3.5$, for each speaker
-  goal (dotted: informative). Right: median $tau$ over detected persuasive
-  runs against $alpha$ at $c = 3.5$; the $surp(1)$ point at $alpha = 2$ is
-  based on the small fraction of runs it detects there.
-] <f-lat>
+== Dependence on speaker rationality, and the two goals
 
-#fig("S6_rate_surfaces.png")[
-  *Rates by $theta^star$ and $alpha$ at $c = 3.5$.* False-alarm rate (left,
-  colour scale to 0.3) and power (right, scale to 1) for each cell of the
-  grid. Top row $surp(1)$, bottom row $surp(2)$.
-] <f-grid>
-
-On the strength of these results the switching simulations that follow use
-$surp(2)$ only.
+#fig("S16_power_vs_alpha_per_theta.png")[
+  *Power against $alpha$ per $theta^star$*, $c = 3.5$, both persuasive
+  goals pooled (400 runs per point), one line per $theta^star$ (light to
+  dark).
+] <f-power-alpha>
 
 // ============================================================= 5 ==========
-= Simulations II: the switching listener <switching>
+= Simulations II: the switching listener and the level-2 speaker <switching>
 
-The second set of simulations turns the switch on and asks two questions.
-Does a persuasion-aware listener recover the accuracy of the vigilant
-listener under persuasion while keeping the speed of the credulous listener
-under an informative speaker? And what happens when the speaker is
-sophisticated enough to model the listener's suspicion? Four studies share
-the grid $theta^star in {0.1, dots, 0.9}$, $psi^star in {inf, pp, pm}$,
-$alpha in {1, 1.5, 2, 3, 4, 5, 7, 10}$, $c in {2, 3, 3.5, 4, 5}$ and both
-switch types, with 100 simulations per cell over 150 rounds and the 9-point
-$theta$ grid on both sides. Every simulation records three listeners on the
-same utterance stream: the always-credulous $Lc$, the always-vigilant $Ls$,
-and the switching listener.
+This section reports the studies in which the switch is on, against the $S_1$
+speaker of @sweep and against an $S_2$ speaker that models the switching
+listener. Every figure and table in it is produced by the second part of
+`notebooks/analysis.ipynb` from the aggregated tables in
+`results/switching/agg/`, which `experiments/switching/aggregate.py` builds
+from the raw trajectories; nothing is re-simulated there.
+
+== The studies
+
+*Design.* Three studies share the grid $theta^star in {0.1, dots, 0.9}$,
+$psi^star in {inf, pp, pm}$, $alpha in {1, 1.5, 2, 3, 4, 5, 7, 10}$,
+$c in {2, 3, 3.5, 4, 5}$ and both switch types of @mechanism (hard, soft),
+with 100 simulations per cell over 150 rounds: 216 $(theta^star, psi^star,
+alpha)$ cells per study, each scored under the ten $(c, "switch type")$
+conditions. The $theta$ grid has nine points ${0.1, dots, 0.9}$ on both
+sides, the listener is given the speaker's $alpha$, and the score is
+$surp(2)$ throughout.
 
 - *Study A: $S_1$ speaker.* The speaker of @sweep. It does not model the
-  listener, so the utterance stream is the same whatever the listener does.
+  listener, so one utterance stream per cell serves every condition
+  (_offline_: the switch cannot feed back into the stream).
 - *Study B: $S_2$ speaker modelling the switching listener.* The speaker's
   internal listener is a replica of the actual switching listener, with the
-  same $c$ and switch type, fed the same utterances. Its informativeness
-  and persuasiveness terms are computed against the belief the switching
-  listener _would_ hold after hearing $u$, including any switch that $u$
-  would trigger. This speaker therefore knows that it is being watched.
-- *Studies Fcred and Fvig: level-2 Fang dyads.* An $S_2$ whose internal
-  listener is a credulous $Lc$ (Fcred) or a vigilant $Ls$ (Fvig), the level-2
-  counterparts of the cooperative and strategic dyads of @fang2026, used as
-  reference points.
+  same $c$ and switch type, fed the same utterances. Its informativeness and
+  persuasiveness terms are computed against the belief the switching listener
+  _would_ hold after hearing $u$, including any switch that $u$ would trigger.
+  Each condition is a fresh simulation (_feedback_).
+- *Study Fcred: $S_2$ speaker modelling the credulous listener.* An $S_2$
+  whose internal listener is $Lc$, offline. Before any switch this is exactly
+  the speaker of study B; it is used where the score must be followed for
+  all 150 rounds, because in study B the detector stops at the switch.
 
-The observation stream of simulation $i$ at a given $theta^star$ is identical
-across studies and conditions, so all comparisons are paired.
+*What is recorded.* Every simulation records three listeners on the same
+utterance stream, the always-credulous $Lc$, the always-vigilant $Ls$ and the
+switching listener, together with the detector's state, and, in study B, the
+speaker's distance to the boundary before each choice and whether it chose
+the utterance an informative or a persuasive $S_2$ would have chosen. The
+observation stream of simulation $i$ at a given $theta^star$ is identical
+across studies and conditions, so every comparison between listeners, and
+between studies A and B, is paired.
+
+*Conventions.* $alpha = 3$, $c = 3.5$ and the hard switch are the reference
+settings wherever a single value is shown. _Switched_ means the switching
+listener crossed the boundary at some $t <= 150$, and $tau$ is that round;
+under the informative speaker every switch is a false alarm in the usual
+sense. Curves are means over the 100 runs of a cell, or over the 900 runs of
+a $theta^star$-pooled panel; the aggregated tables carry no spread for the
+running mean or for the two reference listeners' error, so these curves are
+drawn without bands.
+
+== The informative level-2 speaker under the score
+
+#fig("W7_sus_runmean_inf_S1_vs_S2.png")[
+  *Suspicion score under an informative speaker of level 1 and of level 2*,
+  $alpha = 3$. Mean of $sus^((t))$ of $surp(2)$ over 100 runs against round
+  $t$, one panel per $theta^star$, for the informative $S_1$ of study A and
+  the informative $S_2$ of study Fcred, whose internal listener is the $Lc$
+  the score is built on. Dashed: the boundary at $c = 3.5$. Both studies are
+  offline, so the score is followed for all 150 rounds.
+] <f-w-sus>
+
+== Switch rates
+
+#fig("W8_switch_rate_vs_t.png")[
+  *Switch rate against the horizon*, $c = 3.5$, hard switch. Fraction of runs
+  in which the switching listener has switched by round $t$, one line per
+  $alpha$ (light to dark), pooled over $theta^star$. Columns: the $S_1$
+  speaker of study A and the $S_2$ speaker of study B. Rows: informative
+  speaker (900 runs per line) and persuasive speaker, both goals (1,800 runs
+  per line).
+] <f-w-rate>
+
+#figure(
+  table(
+    columns: 9,
+    align: (left, center, center, center, center, center, center, center, center),
+    table.header(
+      table.cell(rowspan: 2)[$alpha$],
+      table.cell(colspan: 4, align: center)[$c = 3.5$],
+      table.cell(colspan: 4, align: center)[$c = 5$],
+      [inf., $S_1$], [inf., $S_2$], [pers., $S_1$], [pers., $S_2$],
+      [inf., $S_1$], [inf., $S_2$], [pers., $S_1$], [pers., $S_2$],
+    ),
+    [1], [0.000], [0.000], [0.566], [0.559], [0.000], [0.000], [0.065], [0.069],
+    [1.5], [0.002], [0.011], [0.821], [0.818], [0.000], [0.000], [0.426], [0.389],
+    [2], [0.006], [0.046], [0.856], [0.852], [0.000], [0.003], [0.583], [0.573],
+    [3], [0.007], [0.461], [0.916], [0.909], [0.000], [0.126], [0.758], [0.729],
+    [4], [0.018], [0.764], [0.964], [0.960], [0.000], [0.599], [0.867], [0.856],
+    [5], [0.082], [0.878], [0.990], [0.989], [0.006], [0.734], [0.939], [0.938],
+    [7], [0.036], [0.973], [1.000], [0.998], [0.014], [0.906], [0.989], [0.993],
+    [10], [0.053], [0.994], [1.000], [1.000], [0.010], [0.992], [1.000], [0.999],
+  ),
+  caption: [*Switch rate by round 150 by speaker level*, hard switch, pooled
+    over $theta^star$. $S_1$ is study A and $S_2$ study B; _inf._ is the
+    informative speaker (900 runs per entry) and _pers._ the two persuasive
+    goals together (1,800 runs).],
+) <t-w-rates>
 
 == Accuracy of the three listeners
 
-@f-acc shows the mean absolute error of the posterior mean,
-$|EE[theta] - theta^star|$, by round for the three listeners at $alpha = 3$
-and $c = 3.5$ with a hard switch. Under an informative speaker the three
-listeners are indistinguishable in both studies. Under a persuasive speaker
-the credulous listener's error plateaus near 0.05 while the vigilant
-listener's continues to fall; the switching listener follows the credulous
-curve for the first few rounds and then joins the vigilant curve, which is
-the intended behaviour. @t-acc gives the time-averaged error over the 150
-rounds by $alpha$ for study B. Under the informative $S_2$ the switching
-listener is as accurate as the credulous one at every $alpha$ (and slightly
-more accurate than the vigilant one, which pays a small price for its
-uncertainty about $psi$). Under the persuasive $S_2$ it is within 0.002 of
-the vigilant listener from $alpha = 3$ upward and within 0.006 below.
+#fig("W9_listener_accuracy.png")[
+  *Accuracy of the three listeners on the same runs*, $alpha = 3$,
+  $c = 3.5$, hard switch. Mean $|EE[theta] - theta^star|$ against round for
+  the always-credulous, always-vigilant and switching listeners, pooled over
+  $theta^star$ (900 runs per panel). Rows: study A ($S_1$) and study B
+  ($S_2$ modelling the switching listener). Columns: true speaker goal.
+] <f-w-acc>
 
-#fig("W1_listener_accuracy.png")[
-  *Mean absolute error of the three listeners*, $|EE[theta] - theta^star|$
-  against round (log axis), pooled over $theta^star$, at $alpha = 3$,
-  $c = 3.5$, hard switch. Top row: study A ($S_1$ speaker). Bottom row:
-  study B ($S_2$ speaker that models the switching listener). Columns: true
-  speaker goal.
-] <f-acc>
+#fig("W10_accuracy_per_theta_B_pers_up.png")[
+  *Accuracy of the three listeners per $theta^star$* under the persuade-up
+  $S_2$ of study B, $alpha = 3$, $c = 3.5$, hard switch; 100 runs per panel.
+  The dotted vertical line is the median switch round of the panel, and the
+  fraction of runs that switched is printed with it.
+] <f-w-acc-theta>
 
 #figure(
   table(
@@ -686,135 +802,38 @@ the vigilant listener from $alpha = 3$ upward and within 0.006 below.
     [7], [0.012], [0.014], [0.014], [0.099], [0.061], [0.062], [0.104], [0.068], [0.068],
     [10], [0.012], [0.014], [0.013], [0.101], [0.093], [0.093], [0.100], [0.100], [0.101],
   ),
-  caption: [*Time-averaged $|EE[theta] - theta^star|$ over 150 rounds* in
-    study B at $c = 3.5$, hard switch, pooled over $theta^star$, for the
+  caption: [*Time-averaged $|EE[theta] - theta^star|$ over the 150 rounds*
+    in study B at $c = 3.5$, hard switch, pooled over $theta^star$, for the
     credulous, vigilant and switching listeners.],
-) <t-acc>
-
-The cost and the benefit of switching can be read off one plane. For each
-$(alpha, c)$ cell define the switching listener's _regret_ as its
-time-averaged error minus that of the better of the two fixed listeners,
-computed separately against the informative and the persuasive speakers.
-@f-regret plots the two regrets against each other. Against the $S_1$
-speaker, both regrets are small at every setting and shrink with $alpha$;
-raising $c$ trades a lower cost under the informative speaker for a higher
-cost under the persuasive one, as it should. Against the $S_2$ speaker of
-study B the picture changes at high $alpha$: the regret against the
-informative speaker grows, because, as the next section shows, an
-informative $S_2$ that models a suspicious listener triggers the switch
-itself.
-
-#fig("W2_regret_plane.png")[
-  *Cost--benefit plane of the switch.* Time-averaged regret of the switching
-  listener against the better fixed listener, under an informative speaker
-  ($x$) and under a persuasive speaker ($y$, mean of the two goals), one
-  curve per $alpha$ traced through $c in {2, 3, 3.5, 4, 5}$ (labels shown for
-  three values of $alpha$). Pooled over $theta^star$, hard switch. Left:
-  study A. Right: study B.
-] <f-regret>
-
-== A sophisticated informative speaker looks persuasive
-
-The listener's internal model is $Sinf$. In study B the speaker is an
-$S_2$, so even when its goal is informative the listener's model is
-misspecified: the informative $S_2$ chooses the utterance from which its
-internal $L_1$ best recovers the observation, and that is not always the
-utterance $Sinf$ would choose. @f-level shows the consequence. Under the
-informative $S_1$ of study A the switch rate stays below 9% at every
-$alpha$, but under the informative $S_2$ of study B it climbs from 5% at
-$alpha = 2$ to 46% at $alpha = 3$, 88% at $alpha = 5$ and 99% at $alpha = 10$
-for $c = 3.5$, and raising $c$ only delays the rise. Power against the
-persuasive $S_2$ is the same as against the persuasive $S_1$. The suspicion
-score is, by construction, a test of the informative _$S_1$_ hypothesis, and
-a more deeply reasoning informative speaker is rejected along with the
-persuasive ones. In terms of accuracy this is nearly harmless (@t-acc): the
-listener that switches under an informative $S_2$ becomes a vigilant
-listener, which loses very little. But it means that the switch rate under an
-informative speaker is not a false-alarm rate in the usual sense once the
-speaker's level exceeds the listener's model.
-
-#fig("W3_level_mismatch.png")[
-  *Switch rates by speaker level.* Fraction of runs that switched by round
-  150 against $alpha$, pooled over $theta^star$, hard switch, at $c = 3.5$
-  (solid) and $c = 5$ (dashed), for the $S_1$ speaker of study A and the
-  $S_2$ speaker of study B. Left: informative speaker. Right: persuasive
-  speaker (mean of the two goals).
-] <f-level>
+) <t-w-acc>
 
 == Recovery after the switch: hard against soft
 
-@f-rec aligns the runs of study B at their switching time and follows the
-signed bias $EE[theta] - theta^star$ and the posterior probability of the true
-goal for $k = t - tau$ rounds around the switch, at $theta^star = 0.3$,
-$alpha = 3$, $c = 3.5$. The hard switch coincides with the always-vigilant
-listener from $k = 0$ onward by construction. The soft switch, which keeps
-the credulous $theta$-marginal and only opens the $psi$ dimension, recovers
-more slowly: under the persuade-up speaker its bias remains above the
-vigilant listener's for the whole window, and its identification of the
-speaker's goal lags by about 0.2 in probability. The credulous belief it
-inherits was formed under the wrong speaker model, and vigilant
-interpretation of the future does not undo that. Under the informative
-speaker, conversely, the soft switch is the less disruptive of the two: the
-hard switch briefly inherits the always-vigilant listener's positive bias at
-this $theta^star$, which comes from the mass it holds on the persuade-down
-hypothesis.
+#fig("W11_switch_recovery.png")[
+  *Recovery around the switch* in study B at $alpha = 3$, $c = 3.5$, over
+  the runs that switched, aligned at the switch round and pooled over
+  $theta^star$ (weighted by the number of switched runs per cell). Top: mean
+  $|EE[theta] - theta^star|$ of the switching listener against
+  $k = t - tau$ for the hard and the soft switch, with the always-vigilant
+  and always-credulous listeners on the hard-switch runs. Bottom: the
+  switching listener's posterior probability of the true goal, with the
+  always-vigilant listener's for reference; dotted line at the uniform prior
+  $1\/3$. Columns: true speaker goal. In study B the two switch types are
+  separate simulations, so their streams differ after $tau$.
+] <f-w-rec>
 
-#fig("W4_switch_recovery.png")[
-  *Recovery around the switch* in study B at $theta^star = 0.3$,
-  $alpha = 3$, $c = 3.5$, over runs that switched. Top: signed bias
-  $EE[theta] - theta^star$ against rounds since the switch, for the hard and
-  soft switches, with the always-vigilant and always-credulous listeners on
-  the same runs. Bottom: posterior probability of the true goal after the
-  switch; dotted line at the uniform prior $1\/3$. Columns: true speaker
-  goal.
-] <f-rec>
+== The persuasive $S_2$ near the boundary
 
-== Does the persuasive speaker evade the test?
-
-The $S_2$ of study B evaluates every candidate utterance against the belief
-the switching listener would hold after hearing it, including the possibility
-that the utterance triggers the switch. A persuasive $S_2$ therefore has a
-reason to avoid utterances that would tip the listener into vigilance, where
-its framing is discounted. @f-eva asks whether it does. For every pre-switch
-round we record the margin $sus^((t)) - c macron(sigma)^((t)) \/ sqrt(t)$
-before the speaker's choice, and whether the speaker chose the utterance an
-informative $S_2$ would have chosen. Far from the boundary the persuasive
-$S_2$ takes the informative utterance about 30% of the time at every
-$alpha$, which is the overlap between the informative and the persuasive
-policies. As the margin closes, the probability rises, but only for
-$alpha >= 5$, and even at $alpha = 10$ it reaches about 0.5 in the last bin
-before a crossing. The effect is real but small: within this utterance space
-a persuasive speaker has little scope to be persuasive and inconspicuous at
-once, and by round 150 the switch rates against the persuasive $S_2$ are the
-same as against the persuasive $S_1$ (@f-level).
-
-#fig("W5_speaker_evasion.png")[
+#fig("W12_speaker_evasion.png")[
   *The persuasive $S_2$ near the boundary* (study B, both persuasive goals,
-  $c = 3.5$, hard switch, pooled over $theta^star$). Left: probability that
-  the speaker chose the utterance an informative $S_2$ would have chosen,
-  against the margin between the suspicion score and the boundary at the
-  time of the choice, binned; the rightmost bin is the round before a
-  crossing. Right: the same probability against round, pre-switch rounds
-  only.
-] <f-eva>
-
-== Level-2 reference dyads
-
-For completeness @f-fang reproduces Fang's credulous-against-vigilant
-contrast one level up. The credulous listener paired with an informative
-$S_2$ that models it (Fcred) and the vigilant listener paired with a
-persuasive $S_2$ that models it (Fvig) behave as their level-1 counterparts
-in study A: the level-2 persuader is slightly less damaging to the credulous
-listener than the level-1 persuader early on, and the vigilant listener
-resists both equally.
-
-#fig("W6_fang_dyads.png")[
-  *Level-1 and level-2 dyads.* Mean $|EE[theta] - theta^star|$ by round at
-  $alpha = 3$, pooled over $theta^star$. Solid: the credulous $Lc$ hearing an
-  $S_2$ that models it (Fcred) and the vigilant $Ls$ hearing an $S_2$ that
-  models it (Fvig). Dashed: the same two listeners hearing the $S_1$ of
-  study A.
-] <f-fang>
+  $c = 3.5$, hard switch, pooled over $theta^star$, pre-switch rounds only).
+  Left: probability that the speaker chose the utterance an informative
+  $S_2$ would have chosen, against the margin
+  $sus^((t)) - c thin macron(sigma)^((t)) \/ sqrt(t)$ at the time of the
+  choice, binned; the rightmost bin is the round before a crossing. Right:
+  the same probability against round, over pre-switch rounds with at least
+  300 observations. One line per $alpha$ (light to dark).
+] <f-w-eva>
 
 // ============================================================= 6 ==========
 = Discussion
