@@ -44,136 +44,125 @@
 // the expectation operator needs a multi-character name.
 #let EE = $bb(E)$
 #let one = $bb(1)$
-
 // ---------------------------------------------------------------- title --
 #align(center)[
-  #text(size: 17pt, weight: "bold")[Argumentative Awareness]
+  #text(size: 17pt, weight: "bold")[Detection of Persuasion]
   #v(0.3em)
-  #text(size: 12.5pt)[How a credulous RSA listener comes to suspect persuasion]
+  #text(size: 12.5pt)[How a listener comes to suspect persuasion]
   #v(0.6em)
-  // TODO: full name
-  #text(size: 10pt)[Kerem #h(0.6em) $dot$ #h(0.6em) ILLC, University of Amsterdam]
+  #text(size: 10pt)[Kerem Yoner #h(0.6em) $dot$ #h(0.6em) ILLC, University of Amsterdam]
   #v(0.2em)
-  #text(size: 9.5pt, style: "italic")[Progress report for Michael Franke, September 2026]
+  #text(size: 9.5pt)[Supervisor: Michael Franke]
+  #v(0.2em)
+  #text(size: 9.5pt)[September 2026]
 ]
 #v(1.2em)
 
 // ============================================================= 1 ==========
 = Introduction
-
-Much of what people know about the world is acquired through testimony, and
-the sources of that testimony frequently have an interest in what the
-recipient comes to believe. A reader who learns about a clinical trial from a
-company's press releases, or about a policy from the statements of its
-advocates, is rarely informed in advance whether the source is impartial. If
-the reader comes to doubt the source, the doubt is typically prompted by the
-communicative behaviour itself: a description that is less specific than the
-evidence permitted, or a pattern of emphasis that consistently favours one
-conclusion. The present report examines this transition in a computational
-model of pragmatic language use. Specifically, we ask under what conditions a
-listener who initially accepts a speaker's statements at face value can come
-to infer, from the speaker's choice of utterances alone, that the speaker is
-persuading rather than informing.
+We often learn about the world from what people say, and most of the time, those people have a stake in what we believe. A company reporting the results of a clinical trial may want the
+treatment to look effective; an advocate describing a policy may want us to
+support it. Neither has to lie to influence our judgement. Choosing which
+facts to mention, and how to describe them, can be enough. A listener who
+initially trusts such a source may eventually notice a pattern in its
+choices and begin to question its motives. This report asks how that change
+could arise in a computational model: what in a speaker's utterances could
+lead a listener to suspect persuasion without independent access to the facts?
 
 == Persuasion in the Rational Speech Act framework
 
-The Rational Speech Act (RSA) framework treats communication as recursive
-probabilistic inference @goodman2016 @degen2023. A literal listener
-interprets an utterance by its semantics alone; a pragmatic speaker chooses
-an utterance by reasoning about how that listener will interpret it; a
-pragmatic listener recovers the speaker's meaning by inverting that choice.
-Because the speaker's choice is governed by an explicit utility, the
-framework extends readily to speakers whose aims are not purely informative.
-A persuasive speaker, one who seeks to move the listener's belief in a
-particular direction rather than to reduce the listener's uncertainty, is
-obtained by modifying that utility and leaving the rest of the machinery
-intact @cummins2021 @barnett2022. The same asymmetry of interest is the
-subject of a long literature on strategic communication in economics
-@crawford1982 @kamenica2011; what RSA adds is a listener who can, in
-principle, reason about the speaker's aim.
+The Rational Speech Act (RSA) framework models language use through
+recursive probabilistic reasoning @goodman2016 @degen2023. A literal listener
+interprets an utterance using its semantics. A pragmatic speaker chooses an
+utterance by considering how that listener will interpret it, and a pragmatic
+listener reasons backwards from the choice to what the speaker meant.
+The speaker's utility determines what counts as a useful utterance. Changing
+that utility allows the model to represent persuasion: the speaker can aim
+to shift the listener's belief in a preferred direction @barnett2022.
+Related work on numerical expressions examines how a speaker's argumentative
+aims shape the choice of a description @cummins2021. Strategic communication
+is also studied in economics, where receivers reason about senders with
+different interests @crawford1982 @kamenica2011. RSA connects this reasoning
+about motives to the meanings of particular utterances.
 
-@fang2026 develop this idea for the case of _selective truth-telling_
-@rogers2017: a speaker who never says anything false but exploits the
-vagueness of quantifiers to frame the same evidence favourably or
-unfavourably. Their speaker has one of three goals: an informative goal, or
-one of two persuasive goals that aim to raise or to lower the listener's
-estimate of the treatment's effectiveness. Given its goal, the speaker
-chooses among the literally true quantifier statements accordingly. The model
-has two listeners. A _credulous_ listener inverts the informative speaker
-only; a _vigilant_ listener inverts the full family of speakers and thereby
-infers the speaker's goal jointly with the state of the world. In simulation
-the credulous listener is systematically misled by a persuasive speaker,
-whereas the vigilant listener recovers the true state under a persuasive
-speaker and, under an informative speaker, loses almost nothing relative to
-the credulous listener. Human speakers behave as the model's persuasive
-speaker predicts; human listeners, as we discuss below, largely do not behave
-as the model's vigilant listener predicts.
+Fang et al. study _selective truth-telling_ in this framework @fang2026.
+Their speakers describe treatment outcomes using quantifiers such as
+"some" and "most". Several descriptions can be true of the same evidence,
+leaving room to present it favourably or unfavourably. The speaker has one
+of three goals: to inform, to raise the listener's estimate of the treatment's
+effectiveness, or to lower it. A _credulous_ listener interprets every
+utterance as the choice of an informative speaker. A _vigilant_ listener
+considers all three goals and jointly infers the speaker's goal and the
+state of the world. In their simulations, persuasive speakers systematically
+mislead the credulous listener, whereas the vigilant listener recovers the
+true state and loses little under an informative speaker. Human speakers'
+choices follow the model's predictions more closely than human listeners'
+responses follow those of the vigilant listener.
 
-== Vigilance as a prior, and why that is not enough
+== Vigilance as a prior
 
-In the model of @fang2026, credulity and vigilance are not two strategies
-between which a listener can move. They are two priors over the speaker's
-goal, and which of the two a listener holds is fixed exogenously by a world
-type $omega in {"coop", "strat"}$ that both agents are assumed to know. The
-credulous listener places all of its prior mass on the informative goal, and
-Bayesian conditioning cannot move mass onto a hypothesis that begins at zero.
-Consequently, no sequence of utterances, however suspicious, can lead the
-credulous listener to revise its assumption that the speaker is informative.
-This is not a technical inconvenience but the heart of the matter: the transition of
-interest, from taking a speaker at their word to asking why they chose those
-words, is precisely the one the model cannot represent.
+Credulity and vigilance in this model are fixed starting assumptions. A world
+type $omega in {"coop", "strat"}$, known to both agents, determines the
+listener's prior over speaker goals @fang2026. The credulous listener assigns
+all prior probability to the informative goal. Since Bayesian updating cannot
+give positive probability to a hypothesis whose prior probability is zero,
+no sequence of utterances can make this listener consider persuasion.
+The model therefore leaves open how a listener could move from trusting a
+speaker to questioning the reasons behind its choices.
 
-The transition is also where the empirical picture is least settled.
-In the listener experiment of @fang2026, participants who were explicitly
-warned that the speaker might be a promoter or a sceptic estimated the
-treatment's effectiveness much as participants who had been told the speaker
-was honest, and their speaker-type judgements were best fitted by a vigilant
-model with a strong prior on the informative speaker and a near-zero
-rationality parameter. The authors relate this to the _truth default_ of
-@levine2022: belief in what one is told is the resting state, and deception
-is entertained only once something triggers the consideration. What such a
-trigger can consist of, when the listener has no independent access to the
-facts and no history with the source, is left open. Related computational
-work on lying shows that listeners can reason their way back to the truth
-from a known lie once they are told the speaker's motive @oey2023 @oey2024;
-the question here is how a listener could come to entertain a motive it was
-never told about.
+The listener experiment makes this question particularly relevant. Participants
+warned that a speaker might be a promoter or a sceptic estimated the
+treatment's effectiveness much like participants told that the speaker was
+honest. Their judgements of speaker type were best fitted by a vigilant model
+with a strong informative prior and a near-zero rationality parameter
+@fang2026. The authors connect these findings to the _truth default_: people
+ordinarily accept what they are told, with the possibility of deception
+entering consideration only when something triggers it @levine2022.
+Computational work on lying shows how recursive social reasoning can support
+both lie design and detection @oey2023. Listeners can also correct directional
+bias in false messages, although with reduced precision, when they expect
+directional deception and greater costs for larger lies @oey2024. Here the
+question comes one step earlier: how might a listener begin to consider a
+persuasive motive that it initially ruled out?
 
 == The proposal: model criticism inside the listener
 
-Our proposal is that the credulous listener can find the trigger in its own
-predictions. Interpreting an utterance in RSA requires the listener to hold a
-generative model of the speaker, and a generative model makes predictions:
-before each utterance the credulous listener has a distribution over what an
-informative speaker would say next, and after each utterance it has a
-posterior over what the speaker must have observed to say it. If the speaker
-is in fact persuasive, the utterances it produces are systematically more
-surprising, relative to these predictions, than the predictions themselves
-say they should be. Averaging that excess surprisal across rounds gives a
-statistic, the _suspicion score_, whose null distribution the listener can
-compute exactly; when the score exceeds a boundary the listener discards the
-informative-speaker model and adopts the vigilant listener's prior over
-goals. We call the resulting listener _switching_.
+We propose that the listener can use its own predictions to recognise a
+problem with its assumption. Before each utterance, the credulous listener's
+model predicts what an informative speaker might say. After hearing the
+utterance, the listener can assess how surprising it was under that model.
+A persuasive speaker may repeatedly choose descriptions that are more
+surprising than the model expects. The listener accumulates this excess
+surprisal in a _suspicion score_. If the score crosses a boundary, it begins
+to consider persuasive goals by adopting the vigilant listener's prior.
+We call this a _switching_ listener.
 
-The mechanism adds very little to the listener. Every quantity it uses is one
-the RSA listener already computes in the course of interpretation, so the
-only new machinery is a running average of the per-round surprisal scores and
-a boundary that this average has to cross. The boundary is a single
-dispositional parameter, the amount of unexplained framing a listener
-tolerates before it begins to consider persuasive goals, and it is the
-natural place for individual differences in the strength of the truth default
-to live. The two ways of scoring surprise that we compare, one based on the
-prior predictive over utterances and one on the posterior over the speaker's
-observation, are the sequential counterparts of prior and posterior
-predictive checks in Bayesian model criticism @box1980 @gelman1996, with the
-accumulation and the boundary borrowed from sequential analysis @wald1945.
+The scores use distributions that the RSA listener already computes during
+interpretation. The additional mechanism keeps a running average, computes
+its scale from the model's per-round variances, and compares it with a
+boundary. The threshold parameter controls how much accumulated excess
+surprisal prompts a switch. It could therefore represent individual
+differences in how readily people move beyond the truth default.
 
-The rest of this report defines the setting (@setting) and the mechanism
-with its two scores (@mechanism), and then presents simulation results in
-two parts: how the two scores behave when a level-1 pragmatic speaker talks
-to a credulous listener (@sweep), and how the switching listener fares in
-dyadic interaction, including against a level-2 speaker that models the
-switching listener itself (@switching).
+This approach draws on Bayesian model criticism: the listener evaluates its
+own model using the observations that model is meant to explain
+@box1980 @gelman1996. We compare two scores, one based on the utterance's
+one-step predictive probability and one averaging conditional log scores
+over the posterior distribution of the speaker's observation. Both are
+centred under the listener's current model, and their per-round variances
+can be computed exactly. Evaluating successive predictions follows the
+prequential perspective @dawid1984. Checking the standardised cumulative
+score after every utterance is related to repeated significance testing
+@armitage1969: a threshold checked repeatedly has a different false-alarm
+rate from one checked once. We evaluate the finite-horizon false-alarm rate
+by simulation rather than treating the threshold as a calibrated significance
+level.
+
+The report first defines the setting (@setting) and the switching mechanism
+(@mechanism). The simulations then examine the two scores under a level-1
+speaker (@sweep), followed by the switching listener's performance against
+both a level-1 speaker and a level-2 speaker that models the switching
+listener itself (@switching).
 
 
 // ============================================================= 2 ==========
@@ -276,27 +265,25 @@ hears against what its model of an informative speaker predicted, accumulates
 the scores, and switches to $Ls$ when the accumulated evidence against that
 model crosses a boundary.
 
-It is worth naming the hypothesis being tested once and for all, since
-everything below is computed under it. The _null_ is that the credulous
-listener's internal model is correct, that is, that the utterances it hears
-are produced by the informative speaker $Sinf$ that it inverts. Two features
-of this null matter for what follows. First, it is a hypothesis about the
-speaker only; the world state $theta$ is not part of it. The listener does
-not know $theta$, so under the null the observation the speaker describes is,
-from the listener's point of view, drawn from its own current belief
-$P_(Lc)^((t))(theta)$ rather than from the true rate $theta^star$. All
-expectations "under the null" below are therefore expectations under the
-listener's own model at round $t$, in the sense of a prior or posterior
-predictive check @box1980 @gelman1996, and not under the actual
-data-generating process of a run; we return to the relation between the two
-in @seqtest. Second, the listener needs no model of the alternative: it only
-has to notice that the data are too surprising to have come from the null.
+The listener initially assumes that the speaker is informative. We use
+_null model_ to refer to the generative model behind this assumption: the
+informative speaker $Sinf$, together with the listener's current uncertainty
+about $theta$. The listener does not know the true rate $theta^star$, so it
+predicts the speaker's observations by averaging $P(O | theta)$ over its
+belief $P_(Lc)^((t))(theta)$. Expectations "under the null" below refer to
+this internal predictive model. They need not equal expectations in a
+simulation with a particular fixed $theta^star$. Using the model's own
+predictions as a reference is motivated by Bayesian model criticism
+@box1980 @gelman1996; the centred scores below implement that comparison.
+To raise an alarm, the listener needs only this informative reference model,
+without specifying a persuasive alternative. We return to the distinction
+between its model and the simulation's data-generating process in @seqtest.
 
 == Predictive distributions of the credulous listener
 
 At the start of round $t$ the credulous listener holds $P_(Lc)^((t))(theta)$.
 Pushing this belief onto observations and composing it with the informative
-speaker's current policy gives the listener's _prior predictive_ over
+speaker's current policy gives the listener's _one-step predictive_ over
 utterances, and Bayes' rule gives its _posterior over the speaker's
 observation_ once $u$ is heard:
 $
@@ -308,39 +295,45 @@ The policy $P_(Sinf)^((t))(u | O)$ is the informative speaker's policy at
 round $t$. It depends on the round only through $P_(L_0)^((t))$, which is a
 function of the public utterance history, so it is available to the listener
 without further assumptions. All three distributions in @pred are computed
-by $Lc$ in the course of ordinary interpretation.
+by $Lc$ in the course of ordinary interpretation. The one-step predictive is
+conditional on the preceding utterance history, before the current utterance
+is heard.
 
 == Two surprisal scores
 
 Write $H(p) = -sum_x p(x) log p(x)$ for the entropy of a distribution $p$. We
 consider two ways of scoring the utterance $u^((t))$ heard at round $t$. Each
-compares the surprisal of $u^((t))$ under one of the predictive distributions
-of @pred with the surprisal that the same distribution leads the listener to
-expect, so that under the null each score has mean zero.
+measures excess surprisal relative to the listener's model: the first uses
+the marginal probability of the utterance, and the second averages centred
+conditional log scores over the posterior observation distribution. Under
+the null each score has mean zero.
 
 Under the null, the listener's model of round $t$ generates the data by
 drawing an observation $O tilde P_(Lc)^((t))$ from the listener's current
 belief and then an utterance $u tilde P_(Sinf)^((t))(dot | O)$ from the
 informative speaker. We write $EE_"null"$ and $op("Var")_"null"$ for
-expectations and variances under this joint, whose $u$-marginal is the prior
+expectations and variances under this joint, whose $u$-marginal is the one-step
 predictive $P_(Lc)^((t))(u)$ of @pred. Both scores are centred against this
 joint, so "mean zero under the null" means mean zero as judged by the
 listener's model going into round $t$.
 
-*Prior predictive surprisal* ($surp(1)$). The surprisal of $u^((t))$ under the
-prior predictive, minus its expected value:
+*One-step predictive surprisal* ($surp(1)$). The surprisal of $u^((t))$ under the
+one-step predictive, minus its expected value:
 $ surp(1)^((t)) = -log P_(Lc)^((t))(u^((t))) - H(P_(Lc)^((t))(dot)). $ <surp1>
 The subtracted term is by definition the mean surprisal under
 $P_(Lc)^((t))$, so $EE_"null" [surp(1)^((t))] = 0$.
 
-*Posterior predictive surprisal* ($surp(2)$). Define the excess surprisal of
+*Posterior-averaged conditional surprisal* ($surp(2)$). Define the excess surprisal of
 $u$ under the informative speaker's policy at a fixed observation,
 $ xi^((t))(u, O) = -log P_(Sinf)^((t))(u | O) - H(P_(Sinf)^((t))(dot | O)), $ <xi>
 which, by the same argument, has mean zero under $P_(Sinf)^((t))(dot | O)$
 for every $O$. The score averages it over the listener's posterior about
 which observation the speaker saw:
 $ surp(2)^((t)) = sum_O P_(Lc)^((t))(O | u^((t))) med xi^((t))(u^((t)), O). $ <surp2>
-This score also has mean zero under the null. Averaging @surp2 over the prior
+This is a posterior average of conditional log scores, rather than the
+negative log probability of a replicated utterance under a posterior
+predictive distribution. This score also has mean zero under the null.
+Averaging @surp2 over the one-step
 predictive, substituting the definition of $P_(Lc)^((t))(O | u)$ from @pred
 to clear the denominator, and exchanging the order of summation,
 $
@@ -360,7 +353,7 @@ informative speaker to say it_. Since
 $surp(2)^((t)) = EE_"null" [xi^((t))(u, O) | u = u^((t))]$, it is the
 conditional expectation of the per-observation excess surprisal given the
 utterance. Persuasive utterances such as "some sessions effective" are common
-under the prior predictive, because they are true of many observations, but
+under the one-step predictive, because they are true of many observations, but
 they are poor descriptions of the observations that most plausibly accompany
 them; $surp(2)$ is designed to register exactly this.
 
@@ -370,7 +363,7 @@ To standardise the scores the listener also needs their variances under the
 null. Both are available in closed form, and both are sums over the utterance
 space, so the listener can evaluate them exactly rather than by sampling.
 
-For $surp(1)$ the variance is the varentropy of the prior predictive,
+For $surp(1)$ the variance is the varentropy of the one-step predictive,
 $
   sigma_1^(2,(t)) = op("Var")_"null" [-log P_(Lc)^((t))(u)]
   = sum_u P_(Lc)^((t))(u) (log P_(Lc)^((t))(u))^2 - H(P_(Lc)^((t))(dot))^2.
@@ -417,21 +410,52 @@ $ <sus>
 and raises an alarm the first time the suspicion score exceeds a
 $z$-scaled boundary,
 $ tau = min { t : sus^((t)) > c dot macron(sigma)^((t)) \/ sqrt(t) }. $ <test>
-Under the null the scores are mean-zero with the stated variances, so
-$sus^((t))$ hovers around zero with standard deviation of order
-$macron(sigma)^((t)) \/ sqrt(t)$. The scale treats the per-round scores as
-uncorrelated, which is what the listener's model implies, since each score is
-centred on the belief formed from the earlier rounds; whether the resulting
-variance is accurate in a run is checked against simulation in @sweep. Under
-a persuasive speaker the per-round scores no longer average to zero, so
-$sus^((t))$ settles at a nonzero level while the boundary keeps shrinking
-like $1 \/ sqrt(t)$, and any level that stays positive is eventually crossed.
+When the accumulated variance is positive, the same rule can be written
+on the standardised cumulative-score scale:
+$
+  Z_t = frac(sum_(i = 1)^t s^((i)), sqrt(sum_(i = 1)^t sigma^(2,(i)))),
+  quad tau = min { t : Z_t > c }.
+$ <standardised-test>
+Thus the listener checks a constant upper threshold after every utterance.
+This structure is related to repeated significance testing @armitage1969,
+which studies the overall rejection probability when fixed-level tests are
+repeated on accumulating data. A fixed-sample normal tail probability
+$Phi(-c)$ does not give the probability of crossing at any time up to a
+horizon $T$. The relevant false-alarm rate is
+$P_("informative speaker")(tau <= T)$, evaluated here at $T = 150$ for each
+threshold. Choosing $c$ to attain a desired overall rate would require
+calibration for that horizon and inspection schedule. The present study
+compares a grid of thresholds and reports their empirical operating
+characteristics; it does not impose a prespecified overall significance level.
+Because our scores and their model-based variances adapt to the utterance
+history, thresholds derived for independent observations do not transfer
+automatically. The stopping rule requires only the informative model,
+without a likelihood ratio against a specified persuasive alternative.
+
+The centring gives a precise, but model-dependent, reason for adding the
+per-round variances. Let $cal(H)_(t - 1)$ denote the preceding utterance
+history. If each utterance is generated from the listener's conditional
+predictive distribution, then
+$ EE_"null" [s^((t)) | cal(H)_(t - 1)] = 0. $
+Thus the scores form a martingale-difference sequence: for $i < t$,
+$EE_"null" [s^((i)) s^((t))] = 0$, so scores at different rounds are
+uncorrelated under that process. Their conditional variances can still
+depend on the history. The sum $sum_(i = 1)^t sigma^(2,(i))$ is therefore
+an accumulated conditional-variance scale, not a guarantee that $Z_t$ is
+normally distributed. Nor does the uncorrelatedness claim automatically
+hold in simulations at a fixed $theta^star$, where the listener's predictive
+distribution may differ from the actual one. We check the model-based scale
+against simulation in @sweep.
+
+Under a persuasive speaker the scores can have a positive running mean.
+If that mean stays bounded away from zero while the average model variance
+remains bounded, the boundary shrinks towards zero and is eventually crossed.
 The two scores differ in whether that level stays positive. For $surp(2)$ it
 does: a persuasive utterance remains a poor description of the observations
 that would explain it, whatever belief about $theta$ the listener has settled
 on. For $surp(1)$ it need not: the credulous listener's belief adapts to the
 persuasive utterances, and once it has, those utterances are no longer rare
-under its prior predictive, which is all $surp(1)$ measures. Whether
+under its one-step predictive, which is all $surp(1)$ measures. Whether
 $surp(1)$ still detects then depends on where the credulous belief settles,
 and it need not detect at all (@sweep). Both scores at
 round $t$ are computed from the belief $P_(Lc)^((t))$ that the listener
@@ -450,13 +474,13 @@ listener's estimate of $theta$ converges to the true rate as the rounds
 accumulate (@fang2026, Fig. 1B). Hence, at a fixed
 $theta^star$, the scores carry a bias in the early rounds, while the belief
 is still diffuse, and are mean-zero in the limit; the running mean
-$sus^((T))$ inherits that early bias and averages it away. Whether the bias
+$sus^((t))$ inherits that early bias and averages it away. Whether the bias
 is small enough for the test of @test to be calibrated at every $theta^star$
 over a finite horizon is an empirical question, which @sweep answers.
 Conversely, if the listener's speaker model is wrong, whether because the
 speaker is persuasive or because it reasons at a deeper level than $Sinf$
 (@switching), the belief need not concentrate on $theta^star$, the scores
-retain a nonzero mean, and $sus^((T))$ does not return to zero; that is what
+retain a nonzero mean, and $sus^((t))$ does not return to zero; that is what
 the test detects.
 
 == The switch
@@ -482,10 +506,7 @@ were run.
 // ============================================================= 4 ==========
 = Simulations I: scoring an $S_1$ speaker <sweep>
 
-This section reports the simulation sweep that isolates the two scores. Every
-figure and table in it is produced by `notebooks/analysis.ipynb` from the
-stored runs of the sweep; nothing is re-simulated there.
-
+This section reports the simulation sweep that isolates the two scores.
 == The sweep
 
 *Design.* An $S_1$ speaker with true goal $psi^star$ and rationality $alpha$
@@ -572,7 +593,7 @@ otherwise.
 #fig("S8_surp1_absorption.png")[
   *Absorption of $surp(1)$ under a persuade-up $S_1$*, $alpha = 3$. Tall
   panels: realised surprisal $-log P_(Lc)^((t))(u^((t)))$ (pink) and entropy
-  $H(P_(Lc)^((t)))$ (grey) of the credulous listener's prior predictive,
+  $H(P_(Lc)^((t)))$ (grey) of the credulous listener's one-step predictive,
   rebuilt from the stored beliefs; the shaded gap is $surp(1)^((t))$. Short
   panels: the credulous posterior mean $EE[theta]$ against $theta^star$
   (dotted). Mean $plus.minus 1$ SE over 200 runs.
@@ -584,8 +605,7 @@ otherwise.
   table(
     columns: 8,
     align: (left, center, center, center, center, center, center, center),
-    [score], [$c$], [false alarm], [power, $pp$], [power, $pm$],
-    [median $tau$], [$tau$ quartiles], [by round 10],
+    [score], [$c$], [false alarm], [power, $pp$], [power, $pm$], [median $tau$], [$tau$ quartiles], [by round 10],
     [$surp(1)$], [2.0], [0.234], [0.743], [0.740], [3], [1, 11], [0.75],
     [$surp(1)$], [2.5], [0.121], [0.699], [0.700], [4], [1, 14], [0.71],
     [$surp(1)$], [3.0], [0.069], [0.667], [0.669], [4], [1, 17], [0.67],
@@ -669,44 +689,45 @@ otherwise.
 
 This section reports the studies in which the switch is on, against the $S_1$
 speaker of @sweep and against an $S_2$ speaker that models the switching
-listener. Every figure and table in it is produced by the second part of
-`notebooks/analysis.ipynb` from the aggregated tables in
-`results/switching/agg/`, which `experiments/switching/aggregate.py` builds
-from the raw trajectories; nothing is re-simulated there.
+listener.
 
 == The studies
 
-*Design.* Three studies share the grid $theta^star in {0.1, dots, 0.9}$,
+*Design.* Two studies share the grid $theta^star in {0.1, dots, 0.9}$,
 $psi^star in {inf, pp, pm}$, $alpha in {1, 1.5, 2, 3, 4, 5, 7, 10}$,
 $c in {2, 3, 3.5, 4, 5}$ and both switch types of @mechanism (hard, soft),
 with 100 simulations per cell over 150 rounds: 216 $(theta^star, psi^star,
-alpha)$ cells per study, each scored under the ten $(c, "switch type")$
+  alpha)$ cells per study, each scored under the ten $(c, "switch type")$
 conditions. The $theta$ grid has nine points ${0.1, dots, 0.9}$ on both
 sides, the listener is given the speaker's $alpha$, and the score is
 $surp(2)$ throughout.
 
 - *Study A: $S_1$ speaker.* The speaker of @sweep. It does not model the
-  listener, so one utterance stream per cell serves every condition
+  listener, so each simulated utterance stream serves every condition
   (_offline_: the switch cannot feed back into the stream).
 - *Study B: $S_2$ speaker modelling the switching listener.* The speaker's
   internal listener is a replica of the actual switching listener, with the
   same $c$ and switch type, fed the same utterances. Its informativeness and
   persuasiveness terms are computed against the belief the switching listener
   _would_ hold after hearing $u$, including any switch that $u$ would trigger.
-  Each condition is a fresh simulation (_feedback_).
-- *Study Fcred: $S_2$ speaker modelling the credulous listener.* An $S_2$
-  whose internal listener is $Lc$, offline. Before any switch this is exactly
-  the speaker of study B; it is used where the score must be followed for
-  all 150 rounds, because in study B the detector stops at the switch.
+  Each condition is a fresh simulation.
 
-*What is recorded.* Every simulation records three listeners on the same
-utterance stream, the always-credulous $Lc$, the always-vigilant $Ls$ and the
-switching listener, together with the detector's state, and, in study B, the
-speaker's distance to the boundary before each choice and whether it chose
-the utterance an informative or a persuasive $S_2$ would have chosen. The
-observation stream of simulation $i$ at a given $theta^star$ is identical
-across studies and conditions, so every comparison between listeners, and
-between studies A and B, is paired.
+*What is recorded.* Each simulation tracks the switching listener and two
+reference listeners, the always-credulous $Lc$ and the always-vigilant $Ls$,
+on the same realised utterance stream. In study B, only the switching
+listener's replica enters the speaker's choice rule. The two reference
+listeners interpret the resulting utterances without influencing the speaker.
+Their errors therefore compare interpretations of a common history; they
+do not describe separate interactions in which $S_2$ adapts to each listener
+type. In study A the stream is independent of all three listeners.
+
+We also record the detector's state and, in study B, its distance to the
+boundary before each choice and whether the chosen utterance matches the
+most probable choice under an informative reference policy (defined in
+@speaker-boundary). The observation stream of simulation $i$ at a given
+$theta^star$ is shared across studies and conditions. Comparisons within a
+run therefore share utterances, while comparisons across studies and
+conditions share observations but can have different utterance streams.
 
 *Conventions.* $alpha = 3$, $c = 3.5$ and the hard switch are the reference
 settings wherever a single value is shown. _Switched_ means the switching
@@ -716,17 +737,6 @@ sense. Curves are means over the 100 runs of a cell, or over the 900 runs of
 a $theta^star$-pooled panel; the aggregated tables carry no spread for the
 running mean or for the two reference listeners' error, so these curves are
 drawn without bands.
-
-== The informative level-2 speaker under the score
-
-#fig("W7_sus_runmean_inf_S1_vs_S2.png")[
-  *Suspicion score under an informative speaker of level 1 and of level 2*,
-  $alpha = 3$. Mean of $sus^((t))$ of $surp(2)$ over 100 runs against round
-  $t$, one panel per $theta^star$, for the informative $S_1$ of study A and
-  the informative $S_2$ of study Fcred, whose internal listener is the $Lc$
-  the score is built on. Dashed: the boundary at $c = 3.5$. Both studies are
-  offline, so the score is followed for all 150 rounds.
-] <f-w-sus>
 
 == Switch rates
 
@@ -819,21 +829,72 @@ drawn without bands.
   switching listener's posterior probability of the true goal, with the
   always-vigilant listener's for reference; dotted line at the uniform prior
   $1\/3$. Columns: true speaker goal. In study B the two switch types are
-  separate simulations, so their streams differ after $tau$.
+  separate simulations with shared observations but potentially different
+  utterance streams, including before $tau$.
 ] <f-w-rec>
 
-== The persuasive $S_2$ near the boundary
+== The persuasive $S_2$ near the boundary <speaker-boundary>
+
+For each choice, we evaluate an informative $S_2$ policy using the same
+observation, rationality parameter and internal switching-listener state as
+the actual persuasive speaker, but with the goal set to $inf$. Its most
+probable utterance is
+$ u_"inf"^((t)) = arg max_u P_(S_2)^((t))(u | O^((t)), inf). $
+Ties are resolved by the fixed utterance ordering. We then record whether
+the persuasive speaker's sampled utterance equals $u_"inf"^((t))$.
+The quantity plotted in @f-w-eva is the empirical fraction of such matches within a
+margin bin or round, pooled over observations and runs. It measures how
+often the persuasive speaker selects the informative policy's most probable
+utterance; it is not the probability that policy assigns to the choice, or
+a comparison with a separately sampled informative utterance.
 
 #fig("W12_speaker_evasion.png")[
   *The persuasive $S_2$ near the boundary* (study B, both persuasive goals,
-  $c = 3.5$, hard switch, pooled over $theta^star$, pre-switch rounds only).
-  Left: probability that the speaker chose the utterance an informative
-  $S_2$ would have chosen, against the margin
-  $sus^((t)) - c thin macron(sigma)^((t)) \/ sqrt(t)$ at the time of the
-  choice, binned; the rightmost bin is the round before a crossing. Right:
-  the same probability against round, over pre-switch rounds with at least
-  300 observations. One line per $alpha$ (light to dark).
+  $c = 3.5$, hard switch, pooled over $theta^star$). Only choices made before
+  the listener has switched are included; this includes the choice that
+  triggers a switch. Left: empirical fraction matching the informative
+  policy's most probable utterance, against the pre-choice margin
+  $sus^((t - 1)) - c thin macron(sigma)^((t - 1)) \/ sqrt(t - 1)$,
+  binned. Round 1 has no preceding score and is excluded from both panels.
+  The rightmost bin contains choices closest to the boundary from below,
+  whether or not they subsequently trigger a switch. Right: the same
+  fraction against round, shown through round 40 where at least 300
+  observations remain. One line per $alpha$ (light to dark).
 ] <f-w-eva>
+
+We can also evaluate this choice directly from the persuasive speaker's
+policy. For the same informative reference utterance, define
+$ q^((t)) = P_(S_2)^((t))(u_"inf"^((t)) | O^((t)), psi^star). $
+This is the probability that the actual persuasive speaker assigns to
+choosing the informative policy's most probable utterance. Conditional on
+the current observation and agent states, it is the expected value of the
+binary match indicator used in @f-w-eva. Averaging these probabilities over
+the same choices removes the sampling noise from the current utterance draw,
+while retaining variation in observations and interaction histories.
+
+#fig("W13_informative_policy_probability.png")[
+  *Policy probability of the informative reference utterance.* Same study,
+  conditions, margin bins and inclusion rules as @f-w-eva. Solid lines:
+  mean $q^((t))$ under the actual persuasive policy. Dashed lines: empirical
+  match fractions, for comparison. Both quantities are pooled using the
+  number of choices in each cell as weights. Left: by pre-choice margin;
+  right: by round through round 40, with at least 300 observations per point.
+  Colours identify $alpha$.
+] <f-w-prob>
+
+The policy probabilities broadly agree with the empirical frequencies.
+In the closest-to-boundary bin, $(-0.01, 0]$, their means are 0.341 at
+$alpha = 3$, 0.405 at $alpha = 7$ and 0.523 at $alpha = 10$; the
+corresponding empirical fractions are 0.347, 0.390 and 0.542, based on
+4,922, 459 and 240 choices respectively. The increase near the boundary
+at high rationality is therefore also present in the policies themselves.
+Some irregularities in the empirical curves are less pronounced: at
+$alpha = 10$ in the adjacent bin $(-0.02, -0.01]$, the mean probability
+is 0.450, compared with an empirical fraction of 0.374 over 211 choices.
+These are descriptive comparisons across different observations and
+histories, conditional on the listener not having switched before the
+choice. They do not isolate the effect of proximity to the boundary or
+by themselves establish deliberate evasion.
 
 // ============================================================= 6 ==========
 = Discussion
