@@ -57,7 +57,6 @@
   #text(size: 9.5pt)[September 2026]
 ]
 #v(1.2em)
-
 // ============================================================= 1 ==========
 = Introduction
 We often learn about the world from what people say, and most of the time, those people have a stake in what we believe. A company reporting the results of a clinical trial may want the
@@ -65,24 +64,24 @@ treatment to look effective; an advocate describing a policy may want us to
 support it. Neither has to lie to influence our judgement. Choosing which
 facts to mention, and how to describe them, can be enough. A listener who
 initially trusts such a source may eventually notice a pattern in its
-choices and begin to question its motives. This report asks how that change
-could arise in a computational model: what in a speaker's utterances could
+choices of words and begin to question its motives. This report asks how that change
+could arise in a computational model: how a speaker's utterances could
 lead a listener to suspect persuasion without independent access to the facts?
 
 == Persuasion in the Rational Speech Act framework
 
 The Rational Speech Act (RSA) framework models language use through
-recursive probabilistic reasoning @goodman2016 @degen2023. A literal listener
+recursive probabilistic reasoning (TO CITE) /* @goodman2016 @degen2023 */. A literal listener
 interprets an utterance using its semantics. A pragmatic speaker chooses an
 utterance by considering how that listener will interpret it, and a pragmatic
 listener reasons backwards from the choice to what the speaker meant.
 The speaker's utility determines what counts as a useful utterance. Changing
 that utility allows the model to represent persuasion: the speaker can aim
-to shift the listener's belief in a preferred direction @barnett2022.
+to shift the listener's belief in a preferred direction (TO CITE) /* @barnett2022 */.
 Related work on numerical expressions examines how a speaker's argumentative
-aims shape the choice of a description @cummins2021. Strategic communication
+aims shape the choice of a description (TO CITE) /* @cummins2021 */. Strategic communication
 is also studied in economics, where receivers reason about senders with
-different interests @crawford1982 @kamenica2011. RSA connects this reasoning
+different interests (TO CITE) /* @crawford1982 @kamenica2011 */. RSA connects this reasoning
 about motives to the meanings of particular utterances.
 
 Fang et al. study _selective truth-telling_ in this framework @fang2026.
@@ -113,15 +112,15 @@ speaker to questioning the reasons behind its choices.
 The listener experiment makes this question particularly relevant. Participants
 warned that a speaker might be a promoter or a sceptic estimated the
 treatment's effectiveness much like participants told that the speaker was
-honest. Their judgements of speaker type were best fitted by a vigilant model
+informative. Their judgements of speaker type were best fitted by a vigilant model
 with a strong informative prior and a near-zero rationality parameter
 @fang2026. The authors connect these findings to the _truth default_: people
 ordinarily accept what they are told, with the possibility of deception
-entering consideration only when something triggers it @levine2022.
+entering consideration only when something triggers it (TO CITE) /* @levine2022 */.
 Computational work on lying shows how recursive social reasoning can support
-both lie design and detection @oey2023. Listeners can also correct directional
+both lie design and detection (TO CITE) /* @oey2023 */. Listeners can also correct directional
 bias in false messages, although with reduced precision, when they expect
-directional deception and greater costs for larger lies @oey2024. Here the
+directional deception and greater costs for larger lies (TO CITE) /* @oey2024 */. Here the
 question comes one step earlier: how might a listener begin to consider a
 persuasive motive that it initially ruled out?
 
@@ -146,14 +145,14 @@ differences in how readily people move beyond the truth default.
 
 This approach draws on Bayesian model criticism: the listener evaluates its
 own model using the observations that model is meant to explain
-@box1980 @gelman1996. We compare two scores, one based on the utterance's
+(TO CITE) /* @box1980 @gelman1996 */. We compare two scores, one based on the utterance's
 one-step predictive probability and one averaging conditional log scores
 over the posterior distribution of the speaker's observation. Both are
 centred under the listener's current model, and their per-round variances
 can be computed exactly. Evaluating successive predictions follows the
-prequential perspective @dawid1984. Checking the standardised cumulative
+prequential perspective (TO CITE) /* @dawid1984 */. Checking the standardised cumulative
 score after every utterance is related to repeated significance testing
-@armitage1969: a threshold checked repeatedly has a different false-alarm
+(TO CITE) /* @armitage1969 */: a threshold checked repeatedly has a different false-alarm
 rate from one checked once. We evaluate the finite-horizon false-alarm rate
 by simulation rather than treating the threshold as a calibrated significance
 level.
@@ -274,7 +273,7 @@ belief $P_(Lc)^((t))(theta)$. Expectations "under the null" below refer to
 this internal predictive model. They need not equal expectations in a
 simulation with a particular fixed $theta^star$. Using the model's own
 predictions as a reference is motivated by Bayesian model criticism
-@box1980 @gelman1996; the centred scores below implement that comparison.
+(TO CITE) /* @box1980 @gelman1996 */; the centred scores below implement that comparison.
 To raise an alarm, the listener needs only this informative reference model,
 without specifying a persuasive alternative. We return to the distinction
 between its model and the simulation's data-generating process in @seqtest.
@@ -304,7 +303,7 @@ is heard.
 Write $H(p) = -sum_x p(x) log p(x)$ for the entropy of a distribution $p$. We
 consider two ways of scoring the utterance $u^((t))$ heard at round $t$. Each
 measures excess surprisal relative to the listener's model: the first uses
-the marginal probability of the utterance, and the second averages centred
+the marginal probability of the utterance, and the second averages centered
 conditional log scores over the posterior observation distribution. Under
 the null each score has mean zero.
 
@@ -312,8 +311,10 @@ Under the null, the listener's model of round $t$ generates the data by
 drawing an observation $O tilde P_(Lc)^((t))$ from the listener's current
 belief and then an utterance $u tilde P_(Sinf)^((t))(dot | O)$ from the
 informative speaker. We write $EE_"null"$ and $op("Var")_"null"$ for
-expectations and variances under this joint, whose $u$-marginal is the one-step
-predictive $P_(Lc)^((t))(u)$ of @pred. Both scores are centred against this
+expectations and variances under this joint. Its $u$-marginal is the one-step
+predictive distribution from @pred:
+#math.equation(block: true, numbering: none, $P_(Lc)^((t))(u).$)
+Both scores are centred against this
 joint, so "mean zero under the null" means mean zero as judged by the
 listener's model going into round $t$.
 
@@ -417,7 +418,7 @@ $
   quad tau = min { t : Z_t > c }.
 $ <standardised-test>
 Thus the listener checks a constant upper threshold after every utterance.
-This structure is related to repeated significance testing @armitage1969,
+This structure is related to repeated significance testing (TO CITE) /* @armitage1969 */,
 which studies the overall rejection probability when fixed-level tests are
 repeated on accumulating data. A fixed-sample normal tail probability
 $Phi(-c)$ does not give the probability of crossing at any time up to a
@@ -431,7 +432,7 @@ Because our scores and their model-based variances adapt to the utterance
 history, thresholds derived for independent observations do not transfer
 automatically. The stopping rule requires only the informative model,
 without a likelihood ratio against a specified persuasive alternative.
-
+/*
 The centring gives a precise, but model-dependent, reason for adding the
 per-round variances. Let $cal(H)_(t - 1)$ denote the preceding utterance
 history. If each utterance is generated from the listener's conditional
@@ -446,6 +447,7 @@ normally distributed. Nor does the uncorrelatedness claim automatically
 hold in simulations at a fixed $theta^star$, where the listener's predictive
 distribution may differ from the actual one. We check the model-based scale
 against simulation in @sweep.
+*/
 
 Under a persuasive speaker the scores can have a positive running mean.
 If that mean stays bounded away from zero while the average model variance
@@ -688,46 +690,56 @@ otherwise.
 = Simulations II: the switching listener and the level-2 speaker <switching>
 
 This section reports the studies in which the switch is on, against the $S_1$
-speaker of @sweep and against an $S_2$ speaker that models the switching
-listener.
+speaker of @sweep and against $S_2$ speakers that model the listener they
+talk to: the switching listener, the credulous $Lc$ or the vigilant $Ls$.
 
 == The studies
 
-*Design.* Two studies share the grid $theta^star in {0.1, dots, 0.9}$,
+*Design.* Four studies share the grid $theta^star in {0.1, dots, 0.9}$,
 $psi^star in {inf, pp, pm}$, $alpha in {1, 1.5, 2, 3, 4, 5, 7, 10}$,
 $c in {2, 3, 3.5, 4, 5}$ and both switch types of @mechanism (hard, soft),
 with 100 simulations per cell over 150 rounds: 216 $(theta^star, psi^star,
   alpha)$ cells per study, each scored under the ten $(c, "switch type")$
 conditions. The $theta$ grid has nine points ${0.1, dots, 0.9}$ on both
 sides, the listener is given the speaker's $alpha$, and the score is
-$surp(2)$ throughout.
+$surp(2)$ throughout. Each study pairs a speaker with the listener it
+models, so that listener's beliefs are the ones that enter the speaker's
+informativeness and persuasiveness terms in @s1.
 
-- *Study A: $S_1$ speaker.* The speaker of @sweep. It does not model the
-  listener, so each simulated utterance stream serves every condition
-  (_offline_: the switch cannot feed back into the stream).
-- *Study B: $S_2$ speaker modelling the switching listener.* The speaker's
-  internal listener is a replica of the actual switching listener, with the
-  same $c$ and switch type, fed the same utterances. Its informativeness and
+- *Study A: $S_1$ speaker.* The speaker of @sweep. It models no listener, so
+  each simulated utterance stream serves every condition (_offline_: the
+  switch cannot feed back into the stream), and the credulous, vigilant and
+  switching listeners on that stream are each a genuine interaction with it.
+- *Study B: $S_2$ modelling the switching listener.* The speaker's internal
+  listener is a replica of the actual switching listener, with the same $c$
+  and switch type, fed the same utterances. Its informativeness and
   persuasiveness terms are computed against the belief the switching listener
   _would_ hold after hearing $u$, including any switch that $u$ would trigger.
-  Each condition is a fresh simulation.
+  Each condition is a fresh simulation (_feedback_).
+- *Study C: $S_2$ modelling the credulous $Lc$.* The speaker's internal
+  listener is the credulous $Lc$ that hears it. It never switches, so the
+  stream does not depend on $c$ or the switch type (offline). Up to the
+  switch, this speaker coincides with the speaker of study B.
+- *Study D: $S_2$ modelling the vigilant $Ls$.* As study C, with the
+  vigilant $Ls$ as the speaker's internal listener and audience.
 
-*What is recorded.* Each simulation tracks the switching listener and two
-reference listeners, the always-credulous $Lc$ and the always-vigilant $Ls$,
-on the same realised utterance stream. In study B, only the switching
-listener's replica enters the speaker's choice rule. The two reference
-listeners interpret the resulting utterances without influencing the speaker.
-Their errors therefore compare interpretations of a common history; they
-do not describe separate interactions in which $S_2$ adapts to each listener
-type. In study A the stream is independent of all three listeners.
+*What is compared.* Every listener is evaluated in the study whose speaker
+models it: the credulous $Lc$ in study C, the vigilant $Ls$ in study D and
+the switching listener in study B. Each simulation also carries the two
+listeners the speaker is not modelling, interpreting the same stream; those
+shadow trajectories are not used anywhere in this section. Across studies
+B, C and D a comparison at a given $(theta^star, alpha)$ therefore sets
+three separate interactions side by side, one per listener type, in which
+the $S_2$ adapts to that listener. Comparisons with study A set the same
+listeners against a speaker that models none of them.
 
 We also record the detector's state and, in study B, its distance to the
 boundary before each choice and whether the chosen utterance matches the
 most probable choice under an informative reference policy (defined in
 @speaker-boundary). The observation stream of simulation $i$ at a given
-$theta^star$ is shared across studies and conditions. Comparisons within a
-run therefore share utterances, while comparisons across studies and
-conditions share observations but can have different utterance streams.
+$theta^star$ is shared across studies and conditions. Comparisons across
+studies and conditions therefore share observations but have different
+utterance streams.
 
 *Conventions.* $alpha = 3$, $c = 3.5$ and the hard switch are the reference
 settings wherever a single value is shown. _Switched_ means the switching
@@ -735,8 +747,8 @@ listener crossed the boundary at some $t <= 150$, and $tau$ is that round;
 under the informative speaker every switch is a false alarm in the usual
 sense. Curves are means over the 100 runs of a cell, or over the 900 runs of
 a $theta^star$-pooled panel; the aggregated tables carry no spread for the
-running mean or for the two reference listeners' error, so these curves are
-drawn without bands.
+running mean or for the credulous and vigilant listeners' error, so these
+curves are drawn without bands.
 
 == Switch rates
 
@@ -775,21 +787,24 @@ drawn without bands.
     goals together (1,800 runs).],
 ) <t-w-rates>
 
-== Accuracy of the three listeners
+== Accuracy of each listener against the speaker that models it
 
 #fig("W9_listener_accuracy.png")[
-  *Accuracy of the three listeners on the same runs*, $alpha = 3$,
-  $c = 3.5$, hard switch. Mean $|EE[theta] - theta^star|$ against round for
-  the always-credulous, always-vigilant and switching listeners, pooled over
-  $theta^star$ (900 runs per panel). Rows: study A ($S_1$) and study B
-  ($S_2$ modelling the switching listener). Columns: true speaker goal.
+  *Accuracy of each listener in its own interaction*, $alpha = 3$,
+  $c = 3.5$, hard switch. Mean $|EE[theta] - theta^star|$ against round,
+  pooled over $theta^star$ (900 runs per curve). Top row: the credulous,
+  vigilant and switching listeners on the stream of the $S_1$ of study A.
+  Bottom row: each listener against the $S_2$ that models it, the credulous
+  $Lc$ from study C, the vigilant $Ls$ from study D and the switching
+  listener from study B; the three curves of a panel come from three
+  separate simulations with shared observations. Columns: true speaker goal.
 ] <f-w-acc>
 
-#fig("W10_accuracy_per_theta_B_pers_up.png")[
-  *Accuracy of the three listeners per $theta^star$* under the persuade-up
-  $S_2$ of study B, $alpha = 3$, $c = 3.5$, hard switch; 100 runs per panel.
-  The dotted vertical line is the median switch round of the panel, and the
-  fraction of runs that switched is printed with it.
+#fig("W10_accuracy_per_theta_matched_pers_up.png")[
+  *Accuracy of each listener per $theta^star$ against the persuade-up $S_2$
+  that models it* (studies C, D, B), $alpha = 3$, $c = 3.5$, hard switch;
+  100 runs per curve. The dotted vertical line is the median switch round in
+  study B, and the fraction of study-B runs that switched is printed with it.
 ] <f-w-acc-theta>
 
 #figure(
@@ -803,19 +818,32 @@ drawn without bands.
       table.cell(colspan: 3, align: center)[persuade-down $S_2$],
       [cred.], [vig.], [switch], [cred.], [vig.], [switch], [cred.], [vig.], [switch],
     ),
-    [1], [0.018], [0.019], [0.018], [0.035], [0.029], [0.033], [0.035], [0.029], [0.034],
-    [1.5], [0.017], [0.019], [0.017], [0.042], [0.029], [0.035], [0.041], [0.030], [0.035],
-    [2], [0.016], [0.019], [0.016], [0.050], [0.031], [0.035], [0.051], [0.032], [0.036],
-    [3], [0.015], [0.018], [0.016], [0.061], [0.033], [0.035], [0.062], [0.035], [0.037],
-    [4], [0.014], [0.017], [0.015], [0.072], [0.038], [0.040], [0.073], [0.040], [0.041],
-    [5], [0.013], [0.016], [0.014], [0.082], [0.044], [0.045], [0.084], [0.046], [0.047],
-    [7], [0.012], [0.014], [0.014], [0.099], [0.061], [0.062], [0.104], [0.068], [0.068],
-    [10], [0.012], [0.014], [0.013], [0.101], [0.093], [0.093], [0.100], [0.100], [0.101],
+    [1], [0.018], [0.019], [0.018], [0.034], [0.029], [0.033], [0.036], [0.031], [0.034],
+    [1.5], [0.017], [0.017], [0.017], [0.042], [0.031], [0.035], [0.043], [0.031], [0.035],
+    [2], [0.016], [0.017], [0.016], [0.049], [0.031], [0.035], [0.049], [0.032], [0.036],
+    [3], [0.014], [0.015], [0.016], [0.059], [0.035], [0.035], [0.060], [0.036], [0.037],
+    [4], [0.014], [0.014], [0.015], [0.064], [0.040], [0.040], [0.064], [0.041], [0.041],
+    [5], [0.013], [0.014], [0.014], [0.068], [0.043], [0.045], [0.069], [0.048], [0.047],
+    [7], [0.013], [0.014], [0.014], [0.073], [0.061], [0.062], [0.074], [0.066], [0.068],
+    [10], [0.012], [0.013], [0.013], [0.080], [0.091], [0.093], [0.081], [0.102], [0.101],
   ),
   caption: [*Time-averaged $|EE[theta] - theta^star|$ over the 150 rounds*
-    in study B at $c = 3.5$, hard switch, pooled over $theta^star$, for the
-    credulous, vigilant and switching listeners.],
+    at $c = 3.5$, hard switch, pooled over $theta^star$, each listener
+    against the $S_2$ that models it: _cred._ is the credulous $Lc$ of
+    study C, _vig._ the vigilant $Ls$ of study D and _switch_ the switching
+    listener of study B.],
 ) <t-w-acc>
+
+Under the informative $S_2$ the three listeners are within 0.002 of one
+another at every $alpha$: the switching listener's false alarms (@t-w-rates)
+cost it little against an honest speaker. Under the persuasive $S_2$ at
+$alpha = 3$ the switching listener's time-averaged error, 0.035, equals the
+vigilant listener's and is well below the credulous listener's 0.059, and
+@f-w-acc-theta shows the switching curve leaving the credulous one around
+the median switch round in each $theta^star$ panel. This ordering holds up
+to $alpha = 7$ and reverses at $alpha = 10$, where the persuasive $S_2$ that
+models a vigilant or switching listener drives its error above that of the
+credulous dyad (0.091 and 0.093 against 0.080 for persuade-up).
 
 == Recovery after the switch: hard against soft
 
@@ -824,11 +852,9 @@ drawn without bands.
   the runs that switched, aligned at the switch round and pooled over
   $theta^star$ (weighted by the number of switched runs per cell). Top: mean
   $|EE[theta] - theta^star|$ of the switching listener against
-  $k = t - tau$ for the hard and the soft switch, with the always-vigilant
-  and always-credulous listeners on the hard-switch runs. Bottom: the
-  switching listener's posterior probability of the true goal, with the
-  always-vigilant listener's for reference; dotted line at the uniform prior
-  $1\/3$. Columns: true speaker goal. In study B the two switch types are
+  $k = t - tau$ for the hard and the soft switch. Bottom: the switching
+  listener's posterior probability of the true goal; dotted line at the
+  uniform prior $1\/3$. Columns: true speaker goal. In study B the two switch types are
   separate simulations with shared observations but potentially different
   utterance streams, including before $tau$.
 ] <f-w-rec>
